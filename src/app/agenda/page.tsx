@@ -233,7 +233,7 @@ function SessionCard({
       {/* Actions */}
       <div className="flex shrink-0 flex-col items-end gap-2">
         {upcoming && session.whereby_room_url && (
-          <Button size="sm" render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" />}>
+          <Button size="sm" nativeButton={false} render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" aria-label="Entrar na sessão" />}>
             <Video className="mr-1 h-3.5 w-3.5" />
             Entrar
           </Button>

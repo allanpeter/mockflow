@@ -104,7 +104,7 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
         </div>
 
         {session?.whereby_room_url ? (
-          <Button className="w-full mt-2" render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" aria-label="Entrar na sessão" />}>
+          <Button className="w-full mt-2" nativeButton={false} render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" aria-label="Entrar na sessão" />}>
             <Video className="mr-2 h-4 w-4" />
             Entrar na sessão
           </Button>

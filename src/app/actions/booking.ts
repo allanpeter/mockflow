@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendBookingConfirmedLearner, sendNewBookingTutor } from '@/lib/email'
 import { createOrder, confirmOrder } from '@/lib/payment'
 import { redirect } from 'next/navigation'
 
@@ -38,7 +39,7 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     .from('bookings')
     .select(`
       id, gross_amount, tutor_amount, tutor_id,
-      tutor_profiles ( tutor: profiles ( full_name ) )
+      tutor_profiles ( user_id, tutor: profiles ( full_name ) )
     `)
     .eq('id', bookingId)
     .single<{
@@ -46,7 +47,7 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
       gross_amount: number
       tutor_amount: number
       tutor_id: string
-      tutor_profiles: { tutor: { full_name: string } }
+      tutor_profiles: { user_id: string; tutor: { full_name: string } }
     }>()
 
   if (!booking) return { error: 'Erro ao criar reserva.' }
@@ -102,5 +103,74 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     paid_at: null,
   })
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mockflow.com.br'
+  await sendBookingEmails({
+    admin,
+    appUrl,
+    learnerEmail: user.email!,
+    learnerName: profile.full_name,
+    tutorName,
+    tutorUserId: booking.tutor_profiles?.user_id,
+    startsAt: slot!.starts_at,
+    endsAt: slot!.ends_at,
+    amount: booking.gross_amount,
+    bookingId: booking.id,
+  })
+
   redirect(`/booking/${booking.id}/confirmation`)
+}
+
+// ---------- helpers ----------
+
+type AdminClient = ReturnType<typeof createAdminClient>
+
+async function sendBookingEmails(opts: {
+  admin: AdminClient
+  appUrl: string
+  learnerEmail: string
+  learnerName: string
+  tutorName: string
+  tutorUserId: string | undefined
+  startsAt: string
+  endsAt: string
+  amount: number
+  bookingId: string
+}) {
+  let tutorEmail: string | null = null
+  if (opts.tutorUserId) {
+    const { data } = await opts.admin.auth.admin.getUserById(opts.tutorUserId)
+    tutorEmail = data?.user?.email ?? null
+  }
+
+  const results = await Promise.allSettled([
+    sendBookingConfirmedLearner({
+      to: opts.learnerEmail,
+      learnerName: opts.learnerName,
+      tutorName: opts.tutorName,
+      startsAt: opts.startsAt,
+      endsAt: opts.endsAt,
+      amount: opts.amount,
+      bookingId: opts.bookingId,
+      appUrl: opts.appUrl,
+    }),
+    tutorEmail
+      ? sendNewBookingTutor({
+          to: tutorEmail,
+          tutorName: opts.tutorName,
+          learnerName: opts.learnerName,
+          startsAt: opts.startsAt,
+          appUrl: opts.appUrl,
+        })
+      : Promise.resolve(),
+  ])
+
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      console.error('[booking] email failed:', result.reason)
+    } else if (result.value && 'error' in result.value && result.value.error) {
+      console.error('[booking] email error:', result.value.error)
+    } else {
+      console.log('[booking] email sent:', result.value)
+    }
+  }
 }
