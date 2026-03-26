@@ -57,7 +57,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
   }>('POST', '/checkouts/create', {
     externalId: params.bookingId,
     methods: ['PIX', 'CREDIT_CARD'],
-    products: [
+    items: [
       {
         externalId: params.bookingId,
         name: params.description,
