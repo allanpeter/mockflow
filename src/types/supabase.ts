@@ -149,6 +149,10 @@ export type Database = {
         Args: { p_learner_id: string; p_slot_id: string }
         Returns: string
       }
+      delete_user_by_id: {
+        Args: { target_user_id: string }
+        Returns: void
+      }
     }
     Enums: {
       user_role: UserRole
