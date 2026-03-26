@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Target, Code2 } from 'lucide-react'
 
 const steps = {
   learner: [
@@ -91,7 +92,9 @@ export default function ComoFuncionaPage() {
       {/* For learners */}
       <section className="space-y-8">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">🎯</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
+            <Target className="h-5 w-5 text-primary" />
+          </div>
           <h2 className="text-2xl font-bold">Para candidatos</h2>
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
@@ -115,7 +118,9 @@ export default function ComoFuncionaPage() {
       {/* For tutors */}
       <section className="space-y-8">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">🧑‍💻</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
+            <Code2 className="h-5 w-5 text-primary" />
+          </div>
           <h2 className="text-2xl font-bold">Para entrevistadores</h2>
         </div>
         <div className="grid gap-6 sm:grid-cols-2">

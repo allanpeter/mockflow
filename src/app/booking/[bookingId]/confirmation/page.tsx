@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle2, Calendar, Clock, Video } from 'lucide-react'
 
 interface Props {
-  params: Promise<{ bookingId: string }>
+  params: Promise<Readonly<{ bookingId: string }>>
 }
 
-export default async function ConfirmationPage({ params }: Props) {
+export default async function ConfirmationPage({ params }: Readonly<Props>) {
   const { bookingId } = await params
   const supabase = await createClient()
 
@@ -28,7 +28,7 @@ export default async function ConfirmationPage({ params }: Props) {
     .eq('learner_id', user.id)
     .single()
 
-  if (!booking || booking.status !== 'confirmed') notFound()
+  if (booking?.status !== 'confirmed') notFound()
 
   const tutor = booking.tutor_profiles as unknown as { profiles: { full_name: string } }
   const session = booking.sessions as unknown as {
@@ -104,13 +104,13 @@ export default async function ConfirmationPage({ params }: Props) {
         </div>
 
         {session?.whereby_room_url ? (
-          <Button className="w-full mt-2" render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" />}>
+          <Button className="w-full mt-2" render={<a href={session.whereby_room_url} target="_blank" rel="noopener noreferrer" aria-label="Entrar na sessão" />}>
             <Video className="mr-2 h-4 w-4" />
             Entrar na sessão
           </Button>
         ) : (
           <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-            🔗 O link da videochamada será enviado por e-mail e aparecerá aqui antes da sessão.
+            O link da videochamada será enviado por e-mail e aparecerá aqui antes da sessão.
           </div>
         )}
       </div>
