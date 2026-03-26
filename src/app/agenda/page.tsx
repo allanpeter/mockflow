@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Calendar, Clock, Video, Star } from 'lucide-react'
+import { CancelButton } from '@/components/booking/cancel-button'
 
 export default async function AgendaPage() {
   const supabase = await createClient()
@@ -194,6 +195,8 @@ function SessionCard({
     hour: '2-digit', minute: '2-digit',
   })
 
+  const hoursUntilSession = (new Date(session.starts_at).getTime() - Date.now()) / (1000 * 60 * 60)
+
   const initials = session.other_name
     .split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
 
@@ -240,6 +243,9 @@ function SessionCard({
         )}
         {upcoming && !session.whereby_room_url && (
           <Badge variant="secondary">Link em breve</Badge>
+        )}
+        {upcoming && !isTutor && (
+          <CancelButton bookingId={session.booking_id} hoursUntilSession={hoursUntilSession} />
         )}
         {!upcoming && !isTutor && (
           <Button size="sm" variant="outline" render={<Link href={`/agenda/${session.id}/review`} />}>

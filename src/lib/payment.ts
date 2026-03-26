@@ -46,3 +46,17 @@ export async function confirmOrder(orderId: string): Promise<ConfirmOrderResult>
 
   return { success: true, chargeId: `mock_charge_${Date.now()}` }
 }
+
+export interface RefundOrderResult {
+  success: boolean
+  refundId: string
+  mock: boolean
+}
+
+export async function refundOrder(chargeId: string): Promise<RefundOrderResult> {
+  // TODO: replace with real Pagar.me refund
+  // const pagarme = new PagarmeClient({ apiKey: process.env.PAGARME_API_KEY! })
+  // const refund = await pagarme.charges.refund(chargeId)
+
+  return { success: true, refundId: `mock_refund_${Date.now()}`, mock: true }
+}
