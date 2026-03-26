@@ -1,8 +1,8 @@
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, Calendar, Clock, Video } from 'lucide-react'
+import { CheckCircle2, Calendar, Clock, Video, Loader2 } from 'lucide-react'
 
 interface Props {
   params: Promise<Readonly<{ bookingId: string }>>
@@ -28,9 +28,31 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
     .eq('learner_id', user.id)
     .single()
 
-  if (booking?.status !== 'confirmed') notFound()
+  // Unknown booking or cancelled
+  if (!booking || booking.status === 'cancelled') redirect('/tutors')
 
   const tutor = booking.tutor_profiles as unknown as { profiles: { full_name: string } }
+
+  // Payment still processing — webhook hasn't fired yet
+  if (booking.status === 'pending_payment') {
+    return (
+      <div className="mx-auto max-w-lg space-y-6 px-4 py-16 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+          <h1 className="text-2xl font-bold">Processando pagamento…</h1>
+          <p className="text-muted-foreground">
+            Aguarde enquanto confirmamos seu pagamento. Esta página atualiza automaticamente.
+          </p>
+        </div>
+        {/* Auto-refresh every 3s until confirmed */}
+        <meta httpEquiv="refresh" content="3" />
+        <Button variant="outline" render={<Link href="/agenda" />}>
+          Ver minha agenda
+        </Button>
+      </div>
+    )
+  }
+
   const session = booking.sessions as unknown as {
     id: string
     starts_at: string
@@ -40,17 +62,13 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
 
   const sessionDate = session
     ? new Date(session.starts_at).toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
       })
     : null
 
   const sessionTime = session
     ? new Date(session.starts_at).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: '2-digit', minute: '2-digit',
       })
     : null
 

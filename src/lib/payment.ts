@@ -1,35 +1,93 @@
 /**
- * Payment service — mock implementation.
- * Swap this file for the real Pagar.me integration when ready.
+ * Payment service — AbacatePay
+ * Docs: https://docs.abacatepay.com
  *
- * Contract:
- *   createOrder()  → returns an orderId and a checkout URL (or null for mock)
- *   confirmOrder() → simulates/confirms payment, returns success flag
+ * NOTE: Split payments are not yet supported by AbacatePay.
+ * The full amount is collected and tutor payouts are tracked manually
+ * in the payouts table for future processing.
  */
+
+const BASE_URL = 'https://api.abacatepay.com/v2'
+
+async function abacate<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const key = process.env.ABACATEPAY_API_KEY
+  if (!key) throw new Error('ABACATEPAY_API_KEY is not set')
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(`AbacatePay ${method} ${path} → ${res.status}: ${JSON.stringify(data)}`)
+  }
+  return data as T
+}
+
+// ---------- createOrder ----------
 
 export interface CreateOrderParams {
   bookingId: string
-  grossAmount: number   // BRL, e.g. 150.00
-  tutorAmount: number   // 90% — for split config later
+  grossAmount: number
+  tutorAmount: number   // kept for payout tracking, not used in split yet
   learnerEmail: string
   learnerName: string
-  description: string   // e.g. "Mock interview — Ana Silva"
+  description: string
+  tutorRecipientId: string | null  // reserved for when AbacatePay adds split support
 }
 
 export interface CreateOrderResult {
   orderId: string
-  checkoutUrl: string | null  // null in mock mode (we skip external redirect)
+  checkoutUrl: string | null
   mock: boolean
 }
 
 export async function createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
-  // TODO: replace with real Pagar.me order creation
-  // const pagarme = new PagarmeClient({ apiKey: process.env.PAGARME_API_KEY! })
-  // const order = await pagarme.orders.create({ ... })
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mockflow.com.br'
 
-  const mockOrderId = `mock_${params.bookingId}_${Date.now()}`
-  return { orderId: mockOrderId, checkoutUrl: null, mock: true }
+  const response = await abacate<{
+    success: boolean
+    data: { id: string; url: string }
+    error: string | null
+  }>('POST', '/checkouts/create', {
+    externalId: params.bookingId,
+    methods: ['PIX', 'CREDIT_CARD'],
+    products: [
+      {
+        externalId: params.bookingId,
+        name: params.description,
+        quantity: 1,
+        price: Math.round(params.grossAmount * 100), // cents
+      },
+    ],
+    customer: {
+      name: params.learnerName,
+      email: params.learnerEmail,
+    },
+    returnUrl: `${appUrl}/tutors`,
+    completionUrl: `${appUrl}/booking/${params.bookingId}/confirmation`,
+    metadata: {
+      bookingId: params.bookingId,
+    },
+  })
+
+  if (!response.success || !response.data) {
+    throw new Error('AbacatePay checkout creation failed: ' + response.error)
+  }
+
+  return {
+    orderId: response.data.id,
+    checkoutUrl: response.data.url,
+    mock: false,
+  }
 }
+
+// ---------- confirmOrder (called by webhook handler) ----------
 
 export interface ConfirmOrderResult {
   success: boolean
@@ -37,15 +95,17 @@ export interface ConfirmOrderResult {
 }
 
 export async function confirmOrder(orderId: string): Promise<ConfirmOrderResult> {
-  // TODO: in production this is driven by Pagar.me webhook, not called directly
-  // Here we just simulate instant approval
+  const response = await abacate<{
+    success: boolean
+    data: { id: string; status: string }
+    error: string | null
+  }>('GET', `/checkouts/${orderId}`)
 
-  if (!orderId.startsWith('mock_')) {
-    throw new Error('confirmOrder called with non-mock orderId in mock mode')
-  }
-
-  return { success: true, chargeId: `mock_charge_${Date.now()}` }
+  const paid = response.data?.status === 'PAID'
+  return { success: paid, chargeId: orderId }
 }
+
+// ---------- refundOrder ----------
 
 export interface RefundOrderResult {
   success: boolean
@@ -54,9 +114,16 @@ export interface RefundOrderResult {
 }
 
 export async function refundOrder(chargeId: string): Promise<RefundOrderResult> {
-  // TODO: replace with real Pagar.me refund
-  // const pagarme = new PagarmeClient({ apiKey: process.env.PAGARME_API_KEY! })
-  // const refund = await pagarme.charges.refund(chargeId)
+  // AbacatePay refund API endpoint — triggers a refund on a completed checkout
+  const response = await abacate<{
+    success: boolean
+    data: { id: string; status: string }
+    error: string | null
+  }>('POST', `/checkouts/${chargeId}/refund`)
 
-  return { success: true, refundId: `mock_refund_${Date.now()}`, mock: true }
+  return {
+    success: response.success && response.data?.status === 'REFUNDED',
+    refundId: chargeId,
+    mock: false,
+  }
 }

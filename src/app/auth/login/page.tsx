@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -27,7 +27,7 @@ const schema = z.object({
 })
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectedFrom = searchParams.get('redirectedFrom') ?? '/dashboard'
@@ -41,12 +41,10 @@ export default function LoginPage() {
 
   async function onSubmit(values: FormValues) {
     const { error } = await supabase.auth.signInWithPassword(values)
-
     if (error) {
       toast.error('Credenciais inválidas. Verifique seu e-mail e senha.')
       return
     }
-
     router.push(redirectedFrom)
     router.refresh()
   }
@@ -66,89 +64,97 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Entrar</CardTitle>
-          <CardDescription>Acesse sua conta MockFlow</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={signInWithGoogle}
-            disabled={googleLoading}
-          >
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            {googleLoading ? 'Redirecionando…' : 'Continuar com Google'}
-          </Button>
+    <Card className="w-full max-w-sm">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Entrar</CardTitle>
+        <CardDescription>Acesse sua conta MockFlow</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={signInWithGoogle}
+          disabled={googleLoading}
+        >
+          <GoogleIcon className="mr-2 h-4 w-4" />
+          {googleLoading ? 'Redirecionando…' : 'Continuar com Google'}
+        </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">ou</span>
-            </div>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">ou</span>
+          </div>
+        </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="voce@exemplo.com"
-                        inputMode="email"
-                        autoComplete="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        autoComplete="current-password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? 'Entrando…' : 'Entrar'}
-              </Button>
-            </form>
-          </Form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="voce@exemplo.com"
+                      inputMode="email"
+                      autoComplete="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? 'Entrando…' : 'Entrar'}
+            </Button>
+          </form>
+        </Form>
 
-          <p className="text-center text-sm text-muted-foreground">
-            Não tem conta?{' '}
-            <Link href="/auth/signup" className="underline underline-offset-4">
-              Cadastre-se
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+        <p className="text-center text-sm text-muted-foreground">
+          Não tem conta?{' '}
+          <Link href="/auth/signup" className="underline underline-offset-4">
+            Cadastre-se
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-svh items-center justify-center p-4">
+      <Suspense fallback={<div className="w-full max-w-sm animate-pulse rounded-xl border bg-card h-96" />}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }
