@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendBookingConfirmedLearner, sendNewBookingTutor } from '@/lib/email'
 import { createOrder, confirmOrder } from '@/lib/payment'
+import { createMeeting } from '@/lib/meeting'
 import { redirect } from 'next/navigation'
 
 export async function initiateBooking(slotId: string): Promise<{ error?: string }> {
@@ -88,11 +89,14 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     .eq('id', slotId)
     .single<{ starts_at: string; ends_at: string }>()
 
+  const meetingRoom = createMeeting({ bookingId: booking.id })
+
   await admin.from('sessions').insert({
     booking_id: booking.id,
     starts_at: slot!.starts_at,
     ends_at: slot!.ends_at,
-    whereby_room_url: null,
+    whereby_room_url: meetingRoom.roomUrl,
+    whereby_host_room_url: meetingRoom.hostRoomUrl,
   })
 
   await admin.from('payouts').insert({

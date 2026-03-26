@@ -38,7 +38,7 @@ export default async function AgendaPage() {
       const { data } = await supabase
         .from('sessions')
         .select(`
-          id, starts_at, ends_at, status, whereby_room_url,
+          id, starts_at, ends_at, status, whereby_room_url, whereby_host_room_url,
           bookings!inner (
             id, gross_amount, tutor_id,
             profiles:learner_id ( full_name, avatar_url )
@@ -48,8 +48,22 @@ export default async function AgendaPage() {
         .order('starts_at', { ascending: false })
 
       const rows = (data ?? []) as unknown as RawSession[]
-      upcoming = rows.filter(r => r.starts_at >= now).reverse()
-      past = rows.filter(r => r.starts_at < now)
+      upcoming = rows.filter(r => r.starts_at >= now).reverse().map(r => ({
+        ...r,
+        other_name: (r.bookings?.profiles as any)?.full_name ?? 'Candidato',
+        other_avatar: (r.bookings?.profiles as any)?.avatar_url ?? null,
+        amount: r.bookings?.gross_amount ?? 0,
+        booking_id: r.bookings?.id ?? '',
+        whereby_room_url: r.whereby_host_room_url ?? r.whereby_room_url,
+      }))
+      past = rows.filter(r => r.starts_at < now).map(r => ({
+        ...r,
+        other_name: (r.bookings?.profiles as any)?.full_name ?? 'Candidato',
+        other_avatar: (r.bookings?.profiles as any)?.avatar_url ?? null,
+        amount: r.bookings?.gross_amount ?? 0,
+        booking_id: r.bookings?.id ?? '',
+        whereby_room_url: r.whereby_host_room_url ?? r.whereby_room_url,
+      }))
     }
   } else {
     const { data } = await supabase
@@ -151,6 +165,7 @@ interface RawSession {
   ends_at: string
   status: string
   whereby_room_url: string | null
+  whereby_host_room_url: string | null
   bookings: {
     id: string
     gross_amount: number
@@ -169,6 +184,7 @@ interface RawSessionLearner {
   ends_at: string
   status: string
   whereby_room_url: string | null
+  whereby_host_room_url: string | null
   bookings: {
     id: string
     gross_amount: number

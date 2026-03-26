@@ -68,6 +68,7 @@ type SessionRow = {
   booking_id: string
   status: SessionStatus
   whereby_room_url: string | null
+  whereby_host_room_url: string | null
   starts_at: string
   ends_at: string
   created_at: string
