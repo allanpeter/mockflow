@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       booking_id: booking.id,
       tutor_id: booking.tutor_id,
       amount: booking.tutor_amount,
-      pagarme_transfer_id: null,
+      transfer_id: null,
       paid_at: null,
     }),
   ])

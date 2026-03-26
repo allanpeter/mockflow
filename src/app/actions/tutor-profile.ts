@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+const PIX_KEY_TYPES = ['cpf', 'cnpj', 'email', 'phone', 'random'] as const
+
 const schema = z.object({
   bio: z.string().min(50, 'Bio deve ter pelo menos 50 caracteres'),
   years_experience: z.coerce.number().int().min(0).max(50),
@@ -12,6 +14,8 @@ const schema = z.object({
     .number()
     .min(30, 'Preço mínimo: R$ 30')
     .max(2000, 'Preço máximo: R$ 2000'),
+  pix_key: z.string().min(1).optional().or(z.literal('')),
+  pix_key_type: z.enum(PIX_KEY_TYPES).optional(),
 })
 
 export type TutorProfileFormState =
@@ -37,6 +41,8 @@ export async function upsertTutorProfile(
     years_experience: formData.get('years_experience'),
     tech_stack: formData.getAll('tech_stack'),
     price_per_session: formData.get('price_per_session'),
+    pix_key: formData.get('pix_key') || undefined,
+    pix_key_type: formData.get('pix_key_type') || undefined,
   }
 
   const parsed = schema.safeParse(raw)
@@ -63,6 +69,8 @@ export async function upsertTutorProfile(
         .eq('user_id', user.id)
     : await supabase.from('tutor_profiles').insert({
         ...parsed.data,
+        pix_key: parsed.data.pix_key ?? null,
+        pix_key_type: parsed.data.pix_key_type ?? null,
         user_id: user.id,
         whereby_room_prefix: null,
         pagarme_recipient_id: null,

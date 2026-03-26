@@ -113,6 +113,40 @@ export interface RefundOrderResult {
   mock: boolean
 }
 
+// ---------- sendPayout (PIX transfer to tutor) ----------
+
+export interface SendPayoutParams {
+  tutorId: string         // internal ID, used as externalId
+  pixKey: string
+  pixKeyType: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
+  amount: number          // BRL (e.g. 135.00)
+  description: string
+}
+
+export interface SendPayoutResult {
+  transferId: string
+}
+
+export async function sendPayout(params: SendPayoutParams): Promise<SendPayoutResult> {
+  const response = await abacate<{
+    success: boolean
+    data: { id: string; status: string }
+    error: string | null
+  }>('POST', '/withdraw/create', {
+    externalId: params.tutorId,
+    pixKey: params.pixKey,
+    pixKeyType: params.pixKeyType.toUpperCase(),
+    amount: Math.round(params.amount * 100), // cents
+    description: params.description,
+  })
+
+  if (!response.success || !response.data) {
+    throw new Error('AbacatePay withdraw failed: ' + response.error)
+  }
+
+  return { transferId: response.data.id }
+}
+
 export async function refundOrder(chargeId: string): Promise<RefundOrderResult> {
   // AbacatePay refund API endpoint — triggers a refund on a completed checkout
   const response = await abacate<{

@@ -34,6 +34,8 @@ type TutorProfileRow = {
   price_per_session: number
   whereby_room_prefix: string | null
   pagarme_recipient_id: string | null
+  pix_key: string | null
+  pix_key_type: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random' | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -91,7 +93,7 @@ type PayoutRow = {
   tutor_id: string
   amount: number
   status: PayoutStatus
-  pagarme_transfer_id: string | null
+  transfer_id: string | null
   paid_at: string | null
   created_at: string
   updated_at: string

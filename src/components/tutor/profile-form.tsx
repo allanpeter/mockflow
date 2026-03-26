@@ -113,6 +113,39 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
         </p>
       </div>
 
+      {/* PIX key for payouts */}
+      <div className="space-y-3">
+        <Label>Chave PIX para recebimentos</Label>
+        <p className="text-xs text-muted-foreground">
+          Após cada sessão concluída, transferimos automaticamente {' '}
+          90% do valor para sua chave PIX.
+        </p>
+        <div className="flex gap-2">
+          <select
+            name="pix_key_type"
+            defaultValue={profile?.pix_key_type ?? ''}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="" disabled>Tipo</option>
+            <option value="cpf">CPF</option>
+            <option value="cnpj">CNPJ</option>
+            <option value="email">E-mail</option>
+            <option value="phone">Telefone</option>
+            <option value="random">Aleatória</option>
+          </select>
+          <Input
+            id="pix_key"
+            name="pix_key"
+            placeholder="Sua chave PIX"
+            defaultValue={profile?.pix_key ?? ''}
+            className="flex-1"
+          />
+        </div>
+        {errors.pix_key && (
+          <p className="text-sm text-destructive">{errors.pix_key[0]}</p>
+        )}
+      </div>
+
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isPending ? 'Salvando…' : 'Salvar perfil'}
