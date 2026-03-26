@@ -3,20 +3,20 @@ import { createClient } from '@/lib/supabase/server'
 
 // Handles both email confirmation links and OAuth redirects
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
+
+  // Use the configured app URL to avoid resolving to the internal container address
+  // when running behind a reverse proxy on Coolify.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // After OAuth signup the profile trigger fires but role may be missing
-      // (Google OAuth doesn't prompt for role). Redirect to role-select if needed.
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
         const { data: profile } = await supabase
@@ -26,13 +26,13 @@ export async function GET(request: Request) {
           .single<{ role: string | null }>()
 
         if (!profile?.role) {
-          return NextResponse.redirect(`${origin}/auth/select-role`)
+          return NextResponse.redirect(`${appUrl}/auth/select-role`)
         }
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${appUrl}${next}`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_failed`)
+  return NextResponse.redirect(`${appUrl}/auth/login?error=auth_callback_failed`)
 }
