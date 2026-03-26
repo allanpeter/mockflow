@@ -101,7 +101,18 @@ export function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-3 text-sm text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} MockFlow. Todos os direitos reservados.</p>
-          <p>Feito com 🇧🇷 para devs brasileiros</p>
+          <p>
+            Feito por{' '}
+            <a
+              href="https://portfolio.apps.allanpimentel.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors underline underline-offset-4"
+            >
+              Allan Pimentel
+            </a>
+            {' '}para devs brasileiros
+          </p>
         </div>
       </div>
     </footer>
