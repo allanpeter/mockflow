@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text()
   const signature = request.headers.get('x-webhook-signature') ?? ''
 
-  console.log('[webhook] body:', rawBody)
+
 
   if (!verifySignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
@@ -32,9 +32,11 @@ export async function POST(request: Request) {
   const event = JSON.parse(rawBody) as {
     event: string
     data: {
-      id: string
-      externalId: string  // bookingId
-      status: string
+      billing: {
+        id: string
+        status: string
+        products: { externalId: string }[]
+      }
     }
   }
 
@@ -42,8 +44,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: true })
   }
 
-  const bookingId = event.data.externalId
-  const checkoutId = event.data.id
+  const bookingId = event.data.billing.products[0]?.externalId
+  const checkoutId = event.data.billing.id
   const admin = createAdminClient()
 
   const { data: booking } = await admin
