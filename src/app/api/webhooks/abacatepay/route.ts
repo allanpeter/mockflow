@@ -33,12 +33,7 @@ export async function POST(request: Request) {
     }
   }
 
-  if (event.event === 'checkout.refunded') {
-    // Refund handled client-side via cancelBooking action — nothing to do here
-    return NextResponse.json({ ok: true })
-  }
-
-  if (event.event !== 'checkout.completed') {
+  if (event.event !== 'billing.paid') {
     return NextResponse.json({ ok: true, skipped: true })
   }
 

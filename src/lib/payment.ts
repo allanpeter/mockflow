@@ -7,7 +7,7 @@
  * in the payouts table for future processing.
  */
 
-const BASE_URL = 'https://api.abacatepay.com/v2'
+const BASE_URL = 'https://api.abacatepay.com/v1'
 
 async function abacate<T>(method: string, path: string, body?: unknown): Promise<T> {
   const key = process.env.ABACATEPAY_API_KEY
@@ -54,10 +54,11 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
     success: boolean
     data: { id: string; url: string }
     error: string | null
-  }>('POST', '/checkouts/create', {
+  }>('POST', '/billing/create', {
     externalId: params.bookingId,
-    methods: ['PIX', 'CREDIT_CARD'],
-    items: [
+    frequency: 'ONE_TIME',
+    methods: ['PIX', 'CARD'],
+    products: [
       {
         externalId: params.bookingId,
         name: params.description,
@@ -68,6 +69,8 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
     customer: {
       name: params.learnerName,
       email: params.learnerEmail,
+      cellphone: '00000000000',
+      taxId: '111.444.777-35',
     },
     returnUrl: `${appUrl}/tutors`,
     completionUrl: `${appUrl}/booking/${params.bookingId}/confirmation`,
@@ -99,7 +102,7 @@ export async function confirmOrder(orderId: string): Promise<ConfirmOrderResult>
     success: boolean
     data: { id: string; status: string }
     error: string | null
-  }>('GET', `/checkouts/${orderId}`)
+  }>('GET', `/billing/${orderId}`)
 
   const paid = response.data?.status === 'PAID'
   return { success: paid, chargeId: orderId }
@@ -132,7 +135,7 @@ export async function sendPayout(params: SendPayoutParams): Promise<SendPayoutRe
     success: boolean
     data: { id: string; status: string }
     error: string | null
-  }>('POST', '/withdraw/create', {
+  }>('POST', '/transfer/create', {
     externalId: params.tutorId,
     pixKey: params.pixKey,
     pixKeyType: params.pixKeyType.toUpperCase(),
@@ -153,7 +156,7 @@ export async function refundOrder(chargeId: string): Promise<RefundOrderResult> 
     success: boolean
     data: { id: string; status: string }
     error: string | null
-  }>('POST', `/checkouts/${chargeId}/refund`)
+  }>('POST', `/billing/${chargeId}/refund`)
 
   return {
     success: response.success && response.data?.status === 'REFUNDED',
