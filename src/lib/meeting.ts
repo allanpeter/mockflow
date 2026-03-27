@@ -14,7 +14,10 @@ export interface MeetingRoom {
 
 export function createMeeting(opts: { bookingId: string }): MeetingRoom {
   const base = process.env.JITSI_URL?.replace(/\/$/, '') ?? 'https://meet.jit.si'
-  const roomUrl = `${base}/mockflow-${opts.bookingId}`
+  const room = `mockflow-${opts.bookingId}`
+  // Disable lobby/moderator requirement so both participants can join freely
+  const params = 'config.lobby.autoKnock=true&config.prejoinPageEnabled=false&config.requireDisplayName=false'
+  const roomUrl = `${base}/${room}#${params}`
 
   return { roomUrl, hostRoomUrl: roomUrl }
 }
