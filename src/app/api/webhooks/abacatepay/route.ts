@@ -23,6 +23,8 @@ export async function POST(request: Request) {
   const rawBody = await request.text()
   const signature = request.headers.get('x-webhook-signature') ?? ''
 
+  console.log('[webhook] body:', rawBody)
+
   if (!verifySignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
