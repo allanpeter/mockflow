@@ -36,15 +36,17 @@ export default async function DashboardPage() {
     if (tutorProfile) {
       const now = new Date().toISOString()
       const { count: upcoming } = await supabase
-        .from('sessions')
-        .select('id', { count: 'exact', head: true })
-        .eq('bookings.tutor_id', tutorProfile.id)
-        .gte('starts_at', now)
+        .from('bookings')
+        .select('sessions!inner(id)', { count: 'exact', head: true })
+        .eq('tutor_id', tutorProfile.id)
+        .eq('status', 'confirmed')
+        .gte('sessions.starts_at', now)
 
       const { count: total } = await supabase
-        .from('sessions')
-        .select('id', { count: 'exact', head: true })
-        .eq('bookings.tutor_id', tutorProfile.id)
+        .from('bookings')
+        .select('sessions!inner(id)', { count: 'exact', head: true })
+        .eq('tutor_id', tutorProfile.id)
+        .eq('status', 'confirmed')
 
       upcomingCount = upcoming ?? 0
       totalCount = total ?? 0
@@ -52,15 +54,17 @@ export default async function DashboardPage() {
   } else {
     const now = new Date().toISOString()
     const { count: upcoming } = await supabase
-      .from('sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('bookings.learner_id', user.id)
-      .gte('starts_at', now)
+      .from('bookings')
+      .select('sessions!inner(id)', { count: 'exact', head: true })
+      .eq('learner_id', user.id)
+      .eq('status', 'confirmed')
+      .gte('sessions.starts_at', now)
 
     const { count: total } = await supabase
-      .from('sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('bookings.learner_id', user.id)
+      .from('bookings')
+      .select('sessions!inner(id)', { count: 'exact', head: true })
+      .eq('learner_id', user.id)
+      .eq('status', 'confirmed')
 
     upcomingCount = upcoming ?? 0
     totalCount = total ?? 0

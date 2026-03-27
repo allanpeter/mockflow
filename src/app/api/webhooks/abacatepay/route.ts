@@ -119,6 +119,7 @@ export async function POST(request: Request) {
           endsAt: slot.ends_at,
           amount: booking.gross_amount,
           bookingId: booking.id,
+          sessionUrl: meetingRoom.roomUrl,
           appUrl,
         })
       : Promise.resolve(),
@@ -128,6 +129,7 @@ export async function POST(request: Request) {
           tutorName,
           learnerName,
           startsAt: slot.starts_at,
+          sessionUrl: meetingRoom.hostRoomUrl,
           appUrl,
         })
       : Promise.resolve(),

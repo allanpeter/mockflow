@@ -29,6 +29,7 @@ function bookingConfirmedLearner(opts: {
   endsAt: string
   amount: number
   confirmationUrl: string
+  sessionUrl: string
 }) {
   const date = formatDate(opts.startsAt)
   const time = formatTime(opts.startsAt)
@@ -75,8 +76,11 @@ function bookingConfirmedLearner(opts: {
             </tr>
           </table>
 
-          <a href="${opts.confirmationUrl}" style="display:block;text-align:center;background:#18181b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px">
-            Ver detalhes da sessão
+          <a href="${opts.sessionUrl}" style="display:block;text-align:center;background:#18181b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:12px">
+            Entrar na sessão
+          </a>
+          <a href="${opts.confirmationUrl}" style="display:block;text-align:center;color:#71717a;text-decoration:none;padding:8px;font-size:13px">
+            Ver detalhes do agendamento
           </a>
         </td></tr>
 
@@ -101,6 +105,7 @@ function newBookingTutor(opts: {
   learnerName: string
   startsAt: string
   dashboardUrl: string
+  sessionUrl: string
 }) {
   const date = formatDate(opts.startsAt)
   const time = formatTime(opts.startsAt)
@@ -141,7 +146,10 @@ function newBookingTutor(opts: {
             </tr>
           </table>
 
-          <a href="${opts.dashboardUrl}" style="display:block;text-align:center;background:#18181b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px">
+          <a href="${opts.sessionUrl}" style="display:block;text-align:center;background:#18181b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:12px">
+            Entrar na sessão
+          </a>
+          <a href="${opts.dashboardUrl}" style="display:block;text-align:center;color:#71717a;text-decoration:none;padding:8px;font-size:13px">
             Ver minha agenda
           </a>
         </td></tr>
@@ -306,6 +314,7 @@ export async function sendBookingConfirmedLearner(opts: {
   endsAt: string
   amount: number
   bookingId: string
+  sessionUrl: string
   appUrl: string
 }) {
   const template = bookingConfirmedLearner({
@@ -320,6 +329,7 @@ export async function sendNewBookingTutor(opts: {
   tutorName: string
   learnerName: string
   startsAt: string
+  sessionUrl: string
   appUrl: string
 }) {
   const template = newBookingTutor({

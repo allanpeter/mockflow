@@ -35,66 +35,66 @@ export default async function AgendaPage() {
       .single<{ id: string }>()
 
     if (tutor) {
-      const { data } = await supabase
-        .from('sessions')
+      const { data, error: qErr } = await supabase
+        .from('bookings')
         .select(`
-          id, starts_at, ends_at, status, whereby_room_url, whereby_host_room_url,
-          bookings!inner (
-            id, gross_amount, tutor_id,
-            profiles:learner_id ( full_name, avatar_url )
-          )
+          id, gross_amount,
+          profiles:learner_id ( full_name, avatar_url ),
+          sessions!inner ( id, starts_at, ends_at, status, whereby_room_url, whereby_host_room_url )
         `)
-        .eq('bookings.tutor_id', tutor.id)
-        .order('starts_at', { ascending: false })
+        .eq('tutor_id', tutor.id)
+        .eq('status', 'confirmed')
+      console.log('[agenda/tutor] rows:', data?.length, 'error:', qErr?.message)
 
-      const rows = (data ?? []) as unknown as RawSession[]
-      upcoming = rows.filter(r => r.starts_at >= now).reverse().map(r => ({
-        ...r,
-        other_name: (r.bookings?.profiles as any)?.full_name ?? 'Candidato',
-        other_avatar: (r.bookings?.profiles as any)?.avatar_url ?? null,
-        amount: r.bookings?.gross_amount ?? 0,
-        booking_id: r.bookings?.id ?? '',
-        whereby_room_url: r.whereby_host_room_url ?? r.whereby_room_url,
-      }))
-      past = rows.filter(r => r.starts_at < now).map(r => ({
-        ...r,
-        other_name: (r.bookings?.profiles as any)?.full_name ?? 'Candidato',
-        other_avatar: (r.bookings?.profiles as any)?.avatar_url ?? null,
-        amount: r.bookings?.gross_amount ?? 0,
-        booking_id: r.bookings?.id ?? '',
-        whereby_room_url: r.whereby_host_room_url ?? r.whereby_room_url,
-      }))
+      const rows = (data ?? []) as unknown as RawTutorBooking[]
+      const allSessions = rows.map(r => {
+        const s = r.sessions as { id: string; starts_at: string; ends_at: string; status: string; whereby_room_url: string | null; whereby_host_room_url: string | null }
+        return {
+          id: s.id,
+          starts_at: s.starts_at,
+          ends_at: s.ends_at,
+          status: s.status,
+          whereby_room_url: s.whereby_host_room_url ?? s.whereby_room_url,
+          other_name: (r.profiles as any)?.full_name ?? 'Candidato',
+          other_avatar: (r.profiles as any)?.avatar_url ?? null,
+          amount: r.gross_amount ?? 0,
+          booking_id: r.id,
+        }
+      })
+      upcoming = allSessions.filter(s => s.starts_at >= now).reverse()
+      past = allSessions.filter(s => s.starts_at < now)
     }
   } else {
-    const { data } = await supabase
-      .from('sessions')
+    const { data, error: learnerErr } = await supabase
+      .from('bookings')
       .select(`
-        id, starts_at, ends_at, status, whereby_room_url,
-        bookings!inner (
-          id, gross_amount, learner_id,
-          tutor_profiles (
-            profiles ( full_name, avatar_url )
-          )
-        )
+        id, gross_amount,
+        tutor_profiles (
+          profiles ( full_name, avatar_url )
+        ),
+        sessions!inner ( id, starts_at, ends_at, status, whereby_room_url )
       `)
-      .eq('bookings.learner_id', user.id)
-      .order('starts_at', { ascending: false })
+      .eq('learner_id', user.id)
+      .eq('status', 'confirmed')
+    console.log('[agenda/learner] rows:', data?.length, 'error:', learnerErr?.message)
 
-    const rows = (data ?? []) as unknown as RawSessionLearner[]
-    upcoming = rows.filter(r => r.starts_at >= now).reverse().map(r => ({
-      ...r,
-      other_name: (r.bookings?.tutor_profiles as any)?.profiles?.full_name ?? 'Entrevistador',
-      other_avatar: (r.bookings?.tutor_profiles as any)?.profiles?.avatar_url ?? null,
-      amount: r.bookings?.gross_amount ?? 0,
-      booking_id: r.bookings?.id ?? '',
-    }))
-    past = rows.filter(r => r.starts_at < now).map(r => ({
-      ...r,
-      other_name: (r.bookings?.tutor_profiles as any)?.profiles?.full_name ?? 'Entrevistador',
-      other_avatar: (r.bookings?.tutor_profiles as any)?.profiles?.avatar_url ?? null,
-      amount: r.bookings?.gross_amount ?? 0,
-      booking_id: r.bookings?.id ?? '',
-    }))
+    const rows = (data ?? []) as unknown as RawLearnerBooking[]
+    const allSessions = rows.map(r => {
+      const s = r.sessions as { id: string; starts_at: string; ends_at: string; status: string; whereby_room_url: string | null }
+      return {
+        id: s.id,
+        starts_at: s.starts_at,
+        ends_at: s.ends_at,
+        status: s.status,
+        whereby_room_url: s.whereby_room_url,
+        other_name: (r.tutor_profiles as any)?.profiles?.full_name ?? 'Entrevistador',
+        other_avatar: (r.tutor_profiles as any)?.profiles?.avatar_url ?? null,
+        amount: r.gross_amount ?? 0,
+        booking_id: r.id,
+      }
+    })
+    upcoming = allSessions.filter(s => s.starts_at >= now).reverse()
+    past = allSessions.filter(s => s.starts_at < now)
   }
 
   return (
@@ -159,38 +159,18 @@ interface SessionItem {
   booking_id: string
 }
 
-interface RawSession {
+interface RawTutorBooking {
   id: string
-  starts_at: string
-  ends_at: string
-  status: string
-  whereby_room_url: string | null
-  whereby_host_room_url: string | null
-  bookings: {
-    id: string
-    gross_amount: number
-    tutor_id: string
-    profiles: { full_name: string; avatar_url: string | null }
-  }
-  other_name: string
-  other_avatar: string | null
-  amount: number
-  booking_id: string
+  gross_amount: number
+  profiles: { full_name: string; avatar_url: string | null }
+  sessions: unknown
 }
 
-interface RawSessionLearner {
+interface RawLearnerBooking {
   id: string
-  starts_at: string
-  ends_at: string
-  status: string
-  whereby_room_url: string | null
-  whereby_host_room_url: string | null
-  bookings: {
-    id: string
-    gross_amount: number
-    learner_id: string
-    tutor_profiles: unknown
-  }
+  gross_amount: number
+  tutor_profiles: unknown
+  sessions: unknown
 }
 
 // ---------- SessionCard ----------
