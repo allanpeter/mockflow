@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ThemeProvider } from '@/components/layout/theme-provider'
+import { IdleTimeout } from '@/components/auth/idle-timeout'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </>
         )}
         <ThemeProvider>
+          <IdleTimeout />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
