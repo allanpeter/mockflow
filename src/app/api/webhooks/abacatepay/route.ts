@@ -4,11 +4,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createMeeting } from '@/lib/meeting'
 import { sendBookingConfirmedLearner, sendNewBookingTutor } from '@/lib/email'
 
-// Verify AbacatePay HMAC-SHA256 webhook signature
+// AbacatePay signs webhooks with HMAC-SHA256 using their public key.
+// The signature is Base64-encoded and sent in X-Webhook-Signature.
+const ABACATEPAY_PUBLIC_KEY = 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9'
+
 function verifySignature(rawBody: string, signature: string): boolean {
-  const secret = process.env.ABACATEPAY_WEBHOOK_SECRET
-  if (!secret) return false
-  const expected = createHmac('sha256', secret).update(rawBody).digest('hex')
+  const expected = createHmac('sha256', ABACATEPAY_PUBLIC_KEY)
+    .update(Buffer.from(rawBody))
+    .digest('base64')
   try {
     return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
   } catch {
