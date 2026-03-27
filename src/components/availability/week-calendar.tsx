@@ -53,7 +53,8 @@ export function WeekCalendar({ initialSlots }: Readonly<Props>) {
   const slotMap = new Map<string, Slot>()
   for (const s of slots) {
     const d = new Date(s.starts_at)
-    const key = `${isoDay(d)} ${String(d.getHours()).padStart(2, '0')}`
+    const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const key = `${localDate} ${String(d.getHours()).padStart(2, '0')}`
     slotMap.set(key, s)
   }
 
