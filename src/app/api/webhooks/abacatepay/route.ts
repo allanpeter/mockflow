@@ -116,7 +116,9 @@ export async function POST(request: Request) {
   const learnerName = learnerAuth?.user?.user_metadata?.full_name ?? 'Candidato'
   const tutorEmail = tutorAuth?.user?.email
 
-  await Promise.allSettled([
+  console.log('[webhook/abacatepay] emails:', { learnerEmail, tutorEmail, tutorName, learnerName })
+
+  const emailResults = await Promise.allSettled([
     learnerEmail
       ? sendBookingConfirmedLearner({
           to: learnerEmail,
@@ -141,6 +143,12 @@ export async function POST(request: Request) {
         })
       : Promise.resolve(),
   ])
+
+  emailResults.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      console.error(`[webhook/abacatepay] email ${i} failed:`, result.reason)
+    }
+  })
 
   return NextResponse.json({ ok: true })
 }
