@@ -321,7 +321,14 @@ export async function sendBookingConfirmedLearner(opts: {
     ...opts,
     confirmationUrl: `${opts.appUrl}/booking/${opts.bookingId}/confirmation`,
   })
-  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+  try {
+    const result = await resend.emails.send({ from: FROM, to: opts.to, ...template })
+    console.log('[email] learner booking confirmed sent:', result)
+    return result
+  } catch (error) {
+    console.error('[email] learner booking confirmed failed:', error)
+    throw error
+  }
 }
 
 export async function sendNewBookingTutor(opts: {
@@ -336,7 +343,14 @@ export async function sendNewBookingTutor(opts: {
     ...opts,
     dashboardUrl: `${opts.appUrl}/agenda`,
   })
-  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+  try {
+    const result = await resend.emails.send({ from: FROM, to: opts.to, ...template })
+    console.log('[email] tutor new booking sent:', result)
+    return result
+  } catch (error) {
+    console.error('[email] tutor new booking failed:', error)
+    throw error
+  }
 }
 
 export async function sendBookingCancelled(opts: {
