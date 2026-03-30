@@ -2,9 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Use Resend's shared test domain until mockflow.com.br is verified in Resend.
-// After verifying the domain, change this to: 'MockFlow <noreply@mockflow.com.br>'
-const FROM = 'MockFlow <onboarding@resend.dev>'
+const FROM = 'MockFlow <noreply@mockflow.com.br>'
 
 // ---------- helpers ----------
 
