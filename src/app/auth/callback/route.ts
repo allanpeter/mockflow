@@ -30,6 +30,11 @@ export async function GET(request: Request) {
         }
       }
 
+      // For email confirmation, show success page instead of redirecting directly
+      if (!next || next === '/') {
+        return NextResponse.redirect(`${appUrl}/auth/confirm`)
+      }
+
       return NextResponse.redirect(`${appUrl}${next}`)
     }
   }
