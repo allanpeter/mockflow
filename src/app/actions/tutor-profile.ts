@@ -3,13 +3,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { ALL_TECHS } from '@/lib/tech-stack'
 
 const PIX_KEY_TYPES = ['cpf', 'cnpj', 'email', 'phone', 'random'] as const
 
 const schema = z.object({
   bio: z.string().min(50, 'Bio deve ter pelo menos 50 caracteres'),
   years_experience: z.coerce.number().int().min(0).max(50),
-  tech_stack: z.array(z.string().min(1)).min(1, 'Adicione pelo menos 1 tecnologia'),
+  tech_stack: z.array(z.enum(ALL_TECHS as [string, ...string[]])).min(1, 'Adicione pelo menos 1 tecnologia').max(15, 'Máximo 15 tecnologias'),
   price_per_session: z.coerce
     .number()
     .min(30, 'Preço mínimo: R$ 30')

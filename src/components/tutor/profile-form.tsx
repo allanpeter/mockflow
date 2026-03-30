@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { TechStackInput } from './tech-stack-input'
+import { TechStackSelector } from './tech-stack-selector'
 import type { Database } from '@/types/supabase'
 
 type TutorProfileRow = Database['public']['Tables']['tutor_profiles']['Row']
@@ -36,6 +36,11 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
 
   return (
     <form action={action} className="space-y-6">
+      {/* Hidden inputs for tech_stack */}
+      {techStack.map(tech => (
+        <input key={tech} type="hidden" name="tech_stack" value={tech} />
+      ))}
+
       {/* Bio */}
       <div className="space-y-2">
         <Label htmlFor="bio">Bio profissional</Label>
@@ -76,7 +81,7 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
       {/* Tech stack */}
       <div className="space-y-2">
         <Label>Stack de tecnologias</Label>
-        <TechStackInput
+        <TechStackSelector
           value={techStack}
           onChange={setTechStack}
           error={errors.tech_stack?.[0]}
