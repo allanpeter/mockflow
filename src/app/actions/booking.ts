@@ -36,7 +36,7 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     .from('bookings')
     .select(`
       id, gross_amount, tutor_amount, tutor_id,
-      tutor_profiles ( user_id, pagarme_recipient_id, tutor: profiles ( full_name ) )
+      tutor_profiles ( user_id, pagarme_recipient_id, tutor: profiles ( full_name, avatar_url ) )
     `)
     .eq('id', bookingId)
     .single<{
@@ -47,13 +47,14 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
       tutor_profiles: {
         user_id: string
         pagarme_recipient_id: string | null
-        tutor: { full_name: string }
+        tutor: { full_name: string; avatar_url: string | null }
       }
     }>()
 
   if (!booking) return { error: 'Erro ao criar reserva.' }
 
   const tutorName = booking.tutor_profiles?.tutor?.full_name ?? 'Entrevistador'
+  const tutorAvatar = booking.tutor_profiles?.tutor?.avatar_url ?? null
 
   const order = await createOrder({
     bookingId: booking.id,
@@ -63,6 +64,7 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     learnerName: profile.full_name,
     description: `Mock interview — ${tutorName}`,
     tutorRecipientId: booking.tutor_profiles?.pagarme_recipient_id ?? null,
+    tutorAvatar,
   })
 
   await admin

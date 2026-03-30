@@ -39,6 +39,7 @@ export interface CreateOrderParams {
   learnerName: string
   description: string
   tutorRecipientId: string | null  // reserved for when AbacatePay adds split support
+  tutorAvatar?: string | null
 }
 
 export interface CreateOrderResult {
@@ -64,13 +65,14 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
         name: params.description,
         quantity: 1,
         price: Math.round(params.grossAmount * 100), // cents
+        ...(params.tutorAvatar && { image: params.tutorAvatar }),
       },
     ],
     customer: {
       name: params.learnerName,
       email: params.learnerEmail,
-      cellphone: '00000000000',
-      taxId: '111.444.777-35',
+      cellphone: '',
+      taxId: '',
     },
     returnUrl: `${appUrl}/tutors`,
     completionUrl: `${appUrl}/booking/${params.bookingId}/confirmation`,
