@@ -87,6 +87,10 @@ export async function POST(request: Request) {
       pagarme_charge_id: checkoutId,
     }).eq('id', booking.id),
 
+    admin.from('availability_slots').update({
+      is_booked: true,
+    }).eq('id', booking.slot_id),
+
     admin.from('sessions').insert({
       booking_id: booking.id,
       starts_at: slot.starts_at,
