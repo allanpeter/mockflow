@@ -155,6 +155,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: void
       }
+      cleanup_abandoned_bookings: {
+        Args: { p_minutes_old?: number }
+        Returns: number
+      }
     }
     Enums: {
       user_role: UserRole

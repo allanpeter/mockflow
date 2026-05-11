@@ -24,10 +24,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const cleanedCount = data as number
-    console.log(`[cron/cleanup] Cleaned up ${cleanedCount} abandoned bookings`)
+    console.log(`[cron/cleanup] Cleaned up ${data} abandoned bookings`)
 
-    return NextResponse.json({ success: true, cleaned: cleanedCount })
+    return NextResponse.json({ success: true, cleaned: data })
   } catch (err) {
     console.error('[cron/cleanup] Exception:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
