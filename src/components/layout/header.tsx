@@ -1,34 +1,18 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { UserMenu } from './user-menu'
 import { ThemeToggle } from './theme-toggle'
 import { Button } from '@/components/ui/button'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 
-export async function Header() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  let profile: { full_name: string; avatar_url: string | null; role: string } | null = null
-  if (user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('full_name, avatar_url, role')
-      .eq('id', user.id)
-      .single<{ full_name: string; avatar_url: string | null; role: string }>()
-    profile = data
-  }
-
+export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        {/* Logo */}
         <Link href="/" className="font-bold text-lg">
           <span className="text-primary">Mock</span>Flow
         </Link>
 
-        {/* Center nav — hidden on mobile */}
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link href="/tutors" className="text-muted-foreground transition-colors hover:text-foreground">
             Entrevistadores
@@ -39,30 +23,49 @@ export async function Header() {
           <Link href="/precos" className="text-muted-foreground transition-colors hover:text-foreground">
             Preços
           </Link>
-          {user && (
-            <Link href="/agenda" className="text-muted-foreground transition-colors hover:text-foreground">
-              Minha Agenda
-            </Link>
-          )}
+          <Suspense fallback={null}>
+            <HeaderAuthNav />
+          </Suspense>
         </nav>
 
-        {/* Right side */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {user && profile ? (
-            <UserMenu profile={profile} />
-          ) : (
-            <>
-              <Button variant="ghost" render={<Link href="/auth/login" />}>
-                Entrar
-              </Button>
-              <Button render={<Link href="/auth/signup" />}>
-                Começar grátis
-              </Button>
-            </>
-          )}
+          <Suspense fallback={<HeaderAuthMenuFallback />}>
+            <HeaderAuthMenu />
+          </Suspense>
         </div>
       </div>
     </header>
+  )
+}
+
+async function HeaderAuthNav() {
+  const current = await getCurrentUser()
+  if (!current) return null
+  return (
+    <Link href="/agenda" className="text-muted-foreground transition-colors hover:text-foreground">
+      Minha Agenda
+    </Link>
+  )
+}
+
+async function HeaderAuthMenu() {
+  const current = await getCurrentUser()
+  if (current?.profile) {
+    return <UserMenu profile={current.profile} />
+  }
+  return <HeaderAuthMenuFallback />
+}
+
+function HeaderAuthMenuFallback() {
+  return (
+    <>
+      <Button variant="ghost" render={<Link href="/auth/login" />}>
+        Entrar
+      </Button>
+      <Button render={<Link href="/auth/signup" />}>
+        Começar grátis
+      </Button>
+    </>
   )
 }
