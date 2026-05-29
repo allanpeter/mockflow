@@ -1,22 +1,21 @@
 /**
- * Payment service — AbacatePay
- * Docs: https://docs.abacatepay.com
- *
- * NOTE: Split payments are not yet supported by AbacatePay.
- * The full amount is collected and tutor payouts are tracked manually
- * in the payouts table for future processing.
+ * Payment service — Pagar.me v5
+ * Docs: https://docs.pagar.me/reference
+ * Auth: Basic Auth — secret key as username, empty password
  */
 
-const BASE_URL = 'https://api.abacatepay.com/v1'
+const BASE_URL = 'https://api.pagar.me/core/v5'
 
-async function abacate<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const key = process.env.ABACATEPAY_API_KEY
-  if (!key) throw new Error('ABACATEPAY_API_KEY is not set')
+async function pagarme<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const key = process.env.PAGARME_SECRET_KEY
+  if (!key) throw new Error('PAGARME_SECRET_KEY is not set')
+
+  const credentials = Buffer.from(`${key}:`).toString('base64')
 
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: `Basic ${credentials}`,
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -24,7 +23,7 @@ async function abacate<T>(method: string, path: string, body?: unknown): Promise
 
   const data = await res.json()
   if (!res.ok) {
-    throw new Error(`AbacatePay ${method} ${path} → ${res.status}: ${JSON.stringify(data)}`)
+    throw new Error(`Pagar.me ${method} ${path} → ${res.status}: ${JSON.stringify(data)}`)
   }
   return data as T
 }
@@ -34,11 +33,11 @@ async function abacate<T>(method: string, path: string, body?: unknown): Promise
 export interface CreateOrderParams {
   bookingId: string
   grossAmount: number
-  tutorAmount: number   // kept for payout tracking, not used in split yet
+  tutorAmount: number
   learnerEmail: string
   learnerName: string
   description: string
-  tutorRecipientId: string | null  // reserved for when AbacatePay adds split support
+  tutorRecipientId: string | null  // reserved for Pagar.me split (recebedores)
   tutorAvatar?: string | null
 }
 
@@ -50,49 +49,56 @@ export interface CreateOrderResult {
 
 export async function createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mockflow.com.br'
+  const amountInCents = Math.round(params.grossAmount * 100)
 
-  const response = await abacate<{
-    success: boolean
-    data: { id: string; url: string }
-    error: string | null
-  }>('POST', '/billing/create', {
-    externalId: params.bookingId,
-    frequency: 'ONE_TIME',
-    methods: ['PIX', 'CARD'],
-    products: [
+  const response = await pagarme<{
+    id: string
+    code: string
+    checkouts?: Array<{ id: string; payment_url: string }>
+  }>('POST', '/orders', {
+    code: params.bookingId,
+    items: [
       {
-        externalId: params.bookingId,
-        name: params.description,
+        amount: amountInCents,
+        description: params.description,
         quantity: 1,
-        price: Math.round(params.grossAmount * 100), // cents
-        ...(params.tutorAvatar && { image: params.tutorAvatar }),
       },
     ],
     customer: {
       name: params.learnerName,
       email: params.learnerEmail,
-      cellphone: '',
-      taxId: '',
+      type: 'individual',
     },
-    returnUrl: `${appUrl}/tutors`,
-    completionUrl: `${appUrl}/booking/${params.bookingId}/confirmation`,
+    payments: [
+      {
+        payment_method: 'checkout',
+        amount: amountInCents,
+        checkout: {
+          accepted_payment_methods: ['pix', 'credit_card'],
+          customer_editable: false,
+          skip_checkout_success_page: true,
+          success_url: `${appUrl}/booking/${params.bookingId}/confirmation`,
+          pix: { expires_in: 3600 },
+          credit_card: {
+            capture: true,
+            installments: [{ number: 1, total: amountInCents }],
+          },
+        },
+      },
+    ],
     metadata: {
       bookingId: params.bookingId,
     },
   })
 
-  if (!response.success || !response.data) {
-    throw new Error('AbacatePay checkout creation failed: ' + response.error)
-  }
-
   return {
-    orderId: response.data.id,
-    checkoutUrl: response.data.url,
+    orderId: response.id,
+    checkoutUrl: response.checkouts?.[0]?.payment_url ?? null,
     mock: false,
   }
 }
 
-// ---------- confirmOrder (called by webhook handler) ----------
+// ---------- confirmOrder (fallback manual check) ----------
 
 export interface ConfirmOrderResult {
   success: boolean
@@ -100,14 +106,16 @@ export interface ConfirmOrderResult {
 }
 
 export async function confirmOrder(orderId: string): Promise<ConfirmOrderResult> {
-  const response = await abacate<{
-    success: boolean
-    data: { id: string; status: string }
-    error: string | null
-  }>('GET', `/billing/${orderId}`)
+  const response = await pagarme<{
+    id: string
+    status: string
+    charges?: Array<{ id: string; status: string }>
+  }>('GET', `/orders/${orderId}`)
 
-  const paid = response.data?.status === 'PAID'
-  return { success: paid, chargeId: orderId }
+  return {
+    success: response.status === 'paid',
+    chargeId: response.charges?.[0]?.id ?? orderId,
+  }
 }
 
 // ---------- refundOrder ----------
@@ -118,13 +126,20 @@ export interface RefundOrderResult {
   mock: boolean
 }
 
-// ---------- sendPayout (PIX transfer to tutor) ----------
+export async function refundOrder(chargeId: string): Promise<RefundOrderResult> {
+  await pagarme('POST', `/charges/${chargeId}/cancel`, {})
+  return { success: true, refundId: chargeId, mock: false }
+}
+
+// ---------- sendPayout ----------
+// Pagar.me split (recebedores) pendente de decisão de arquitetura.
+// O cron de payouts captura esse erro e marca o payout como 'failed'.
 
 export interface SendPayoutParams {
-  tutorId: string         // internal ID, used as externalId
+  tutorId: string
   pixKey: string
   pixKeyType: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
-  amount: number          // BRL (e.g. 135.00)
+  amount: number
   description: string
 }
 
@@ -132,37 +147,6 @@ export interface SendPayoutResult {
   transferId: string
 }
 
-export async function sendPayout(params: SendPayoutParams): Promise<SendPayoutResult> {
-  const response = await abacate<{
-    success: boolean
-    data: { id: string; status: string }
-    error: string | null
-  }>('POST', '/transfer/create', {
-    externalId: params.tutorId,
-    pixKey: params.pixKey,
-    pixKeyType: params.pixKeyType.toUpperCase(),
-    amount: Math.round(params.amount * 100), // cents
-    description: params.description,
-  })
-
-  if (!response.success || !response.data) {
-    throw new Error('AbacatePay withdraw failed: ' + response.error)
-  }
-
-  return { transferId: response.data.id }
-}
-
-export async function refundOrder(chargeId: string): Promise<RefundOrderResult> {
-  // AbacatePay refund API endpoint — triggers a refund on a completed checkout
-  const response = await abacate<{
-    success: boolean
-    data: { id: string; status: string }
-    error: string | null
-  }>('POST', `/billing/${chargeId}/refund`)
-
-  return {
-    success: response.success && response.data?.status === 'REFUNDED',
-    refundId: chargeId,
-    mock: false,
-  }
+export async function sendPayout(_params: SendPayoutParams): Promise<SendPayoutResult> {
+  throw new Error('Payout via Pagar.me ainda não configurado — processe manualmente até implementar recebedores')
 }

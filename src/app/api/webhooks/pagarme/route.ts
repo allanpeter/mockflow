@@ -1,51 +1,52 @@
 import { NextResponse } from 'next/server'
-import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { confirmOrder } from '@/lib/payment'
 import { createMeeting } from '@/lib/meeting'
 import { sendBookingConfirmedLearner, sendNewBookingTutor } from '@/lib/email'
 
-// AbacatePay signs webhooks with HMAC-SHA256 using their public key.
-// The signature is Base64-encoded and sent in X-Webhook-Signature.
-const ABACATEPAY_PUBLIC_KEY = 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9'
+// O Pagar.me v5 não gera um segredo de webhook automático.
+// Segurança garantida verificando o pedido diretamente na API do Pagar.me
+// antes de confirmar o booking — impede webhooks forjados.
 
-function verifySignature(rawBody: string, signature: string): boolean {
-  const expected = createHmac('sha256', ABACATEPAY_PUBLIC_KEY)
-    .update(Buffer.from(rawBody))
-    .digest('base64')
-  try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
-  } catch {
-    return false
+type PagarmeEvent = {
+  type: string
+  data: {
+    id: string
+    code: string
+    status: string
+    charges?: Array<{
+      id: string
+      status: string
+      paid_amount: number
+      payment_method: string
+    }>
+    metadata?: { bookingId?: string }
   }
 }
 
 export async function POST(request: Request) {
   const rawBody = await request.text()
-  const signature = request.headers.get('x-webhook-signature') ?? ''
+  const event = JSON.parse(rawBody) as PagarmeEvent
 
-
-
-  if (!verifySignature(rawBody, signature)) {
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-  }
-
-  const event = JSON.parse(rawBody) as {
-    event: string
-    data: {
-      billing: {
-        id: string
-        status: string
-        products: { externalId: string }[]
-      }
-    }
-  }
-
-  if (event.event !== 'billing.paid') {
+  if (event.type !== 'order.paid') {
     return NextResponse.json({ ok: true, skipped: true })
   }
 
-  const bookingId = event.data.billing.products[0]?.externalId
-  const checkoutId = event.data.billing.id
+  const orderId = event.data.id
+  const bookingId = event.data.metadata?.bookingId ?? event.data.code
+
+  if (!bookingId) {
+    console.error('[webhook/pagarme] bookingId ausente no evento', event)
+    return NextResponse.json({ error: 'Missing bookingId' }, { status: 400 })
+  }
+
+  // Verificação anti-spoofing: consulta a API do Pagar.me para confirmar o status real
+  const { success, chargeId } = await confirmOrder(orderId)
+  if (!success) {
+    console.warn('[webhook/pagarme] pedido não está pago na verificação:', orderId)
+    return NextResponse.json({ error: 'Order not paid' }, { status: 400 })
+  }
+
   const admin = createAdminClient()
 
   const { data: booking } = await admin
@@ -69,11 +70,11 @@ export async function POST(request: Request) {
     }>()
 
   if (!booking) {
-    console.error('[webhook/abacatepay] booking not found:', bookingId)
+    console.error('[webhook/pagarme] booking não encontrado:', bookingId)
     return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
   }
 
-  // Idempotency guard
+  // Idempotência: ignora se já confirmado
   if (booking.status === 'confirmed') {
     return NextResponse.json({ ok: true, skipped: 'already confirmed' })
   }
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
   await Promise.all([
     admin.from('bookings').update({
       status: 'confirmed',
-      pagarme_charge_id: checkoutId,
+      pagarme_charge_id: chargeId,
     }).eq('id', booking.id),
 
     admin.from('availability_slots').update({
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
   const learnerName = learnerAuth?.user?.user_metadata?.full_name ?? 'Candidato'
   const tutorEmail = tutorAuth?.user?.email
 
-  console.log('[webhook/abacatepay] emails:', { learnerEmail, tutorEmail, tutorName, learnerName })
+  console.log('[webhook/pagarme] emails:', { learnerEmail, tutorEmail, tutorName, learnerName })
 
   const emailResults = await Promise.allSettled([
     learnerEmail
@@ -150,7 +151,7 @@ export async function POST(request: Request) {
 
   emailResults.forEach((result, i) => {
     if (result.status === 'rejected') {
-      console.error(`[webhook/abacatepay] email ${i} failed:`, result.reason)
+      console.error(`[webhook/pagarme] email ${i} falhou:`, result.reason)
     }
   })
 
