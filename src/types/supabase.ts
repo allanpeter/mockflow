@@ -25,6 +25,8 @@ type ProfileRow = {
   updated_at: string
 }
 
+export type Company = { name: string; role?: string; current?: boolean }
+
 type TutorProfileRow = {
   id: string
   user_id: string
@@ -32,6 +34,13 @@ type TutorProfileRow = {
   years_experience: number
   tech_stack: string[]
   price_per_session: number
+  headline: string | null
+  intro_video_url: string | null
+  companies: Company[]
+  languages: string[]
+  seniority_levels: string[]
+  interview_formats: string[]
+  certifications: string[]
   whereby_room_prefix: string | null
   pagarme_recipient_id: string | null
   pix_key: string | null
@@ -145,7 +154,18 @@ export type Database = {
         Relationships: []
       }
     }
-    Views: Record<string, never>
+    Views: {
+      tutor_stats: {
+        Row: {
+          tutor_id: string
+          completed_sessions: number
+          total_learners: number
+          returning_learners: number
+          return_rate: number
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       create_booking: {
         Args: { p_learner_id: string; p_slot_id: string }

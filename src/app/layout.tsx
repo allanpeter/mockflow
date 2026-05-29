@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist } from 'next/font/google'
+import { Geist, Sora } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/layout/theme-provider'
 import { IdleTimeout } from '@/components/auth/idle-timeout'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora' })
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 
@@ -28,7 +29,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${geist.variable} ${sora.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         {GA_ID && (
           <>

@@ -1,8 +1,18 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, AlertCircle, Brain, MessageSquare, ShieldCheck, CalendarCheck, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  AlertCircle,
+  Brain,
+  MessageSquare,
+  ShieldCheck,
+  CalendarCheck,
+  Users,
+  Star,
+} from 'lucide-react'
 
 const painPoints = [
   {
@@ -46,6 +56,19 @@ const steps = [
   },
 ]
 
+function avg(reviews: { rating: number }[]): number {
+  return reviews?.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
+}
+
+function initialsOf(name: string | null | undefined): string {
+  return (name ?? '?')
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
 export default async function Home() {
   const supabase = await createClient()
   const {
@@ -55,6 +78,38 @@ export default async function Home() {
   if (user) {
     redirect('/dashboard')
   }
+
+  const [{ data: tutorRows }, { data: testimonialRows }] = await Promise.all([
+    supabase
+      .from('tutor_profiles')
+      .select('id, headline, price_per_session, profiles ( full_name, avatar_url ), reviews ( rating )')
+      .eq('is_active', true),
+    supabase
+      .from('reviews')
+      .select('rating, comment, created_at, profiles ( full_name, avatar_url )')
+      .not('comment', 'is', null)
+      .gte('rating', 4)
+      .order('created_at', { ascending: false })
+      .limit(6),
+  ])
+
+  const tutors = (tutorRows ?? []) as unknown as {
+    id: string
+    headline: string | null
+    price_per_session: number
+    profiles: { full_name: string; avatar_url: string | null }
+    reviews: { rating: number }[]
+  }[]
+
+  const featured = [...tutors].sort((a, b) => avg(b.reviews) - avg(a.reviews)).slice(0, 6)
+  const avatarStrip = tutors.filter((t) => t.profiles?.avatar_url).slice(0, 5)
+
+  const testimonials = (testimonialRows ?? []) as unknown as {
+    rating: number
+    comment: string
+    created_at: string
+    profiles: { full_name: string; avatar_url: string | null }
+  }[]
 
   return (
     <main>
@@ -78,6 +133,37 @@ export default async function Home() {
             Por que funciona
           </Button>
         </div>
+
+        {/* Social proof: real tutor faces */}
+        {avatarStrip.length > 0 && (
+          <div className="flex items-center justify-center gap-3 pt-4">
+            <div className="flex -space-x-2">
+              {avatarStrip.map((t) => (
+                <div
+                  key={t.id}
+                  className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-background bg-muted"
+                >
+                  {t.profiles.avatar_url ? (
+                    <Image
+                      src={t.profiles.avatar_url}
+                      alt={t.profiles.full_name}
+                      fill
+                      className="object-cover"
+                      sizes="36px"
+                    />
+                  ) : (
+                    <span className="flex h-full items-center justify-center text-xs font-semibold text-muted-foreground">
+                      {initialsOf(t.profiles.full_name)}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Entrevistadores reais, prontos para te ajudar agora.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Stats bar */}
@@ -94,8 +180,73 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Featured tutors */}
+      {featured.length > 0 && (
+        <section className="mx-auto max-w-5xl px-4 py-20 space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl font-bold">Entrevistadores em destaque</h2>
+            <p className="text-muted-foreground">Engenheiros experientes, avaliados por quem já treinou com eles.</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.map((tutor) => {
+              const rating = avg(tutor.reviews)
+              return (
+                <Link
+                  key={tutor.id}
+                  href={`/tutors/${tutor.id}`}
+                  className="flex flex-col rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+                      {tutor.profiles?.avatar_url ? (
+                        <Image
+                          src={tutor.profiles.avatar_url}
+                          alt={tutor.profiles.full_name}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-sm font-semibold text-muted-foreground">
+                          {initialsOf(tutor.profiles?.full_name)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{tutor.profiles?.full_name}</p>
+                      {rating > 0 && (
+                        <span className="flex items-center gap-1 text-sm">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          <span className="font-medium">{rating.toFixed(1)}</span>
+                          <span className="text-muted-foreground">({tutor.reviews.length})</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {tutor.headline && (
+                    <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{tutor.headline}</p>
+                  )}
+                  <p className="mt-4 font-semibold">
+                    R$ {tutor.price_per_session.toFixed(2).replace('.', ',')}
+                    <span className="text-xs font-normal text-muted-foreground"> / sessão</span>
+                  </p>
+                </Link>
+              )
+            })}
+          </div>
+
+          <div className="flex justify-center">
+            <Button variant="outline" render={<Link href="/tutors" />}>
+              Ver todos os entrevistadores
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+      )}
+
       {/* Pain section */}
-      <section id="por-que" className="mx-auto max-w-4xl px-4 py-20 space-y-12">
+      <section id="por-que" className="mx-auto max-w-4xl px-4 py-20 space-y-12 border-t">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-bold">Por que você falha em entrevistas técnicas</h2>
           <p className="text-muted-foreground">Não é falta de conhecimento. É falta de prática real.</p>
@@ -142,6 +293,54 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="border-t bg-muted/30">
+          <div className="mx-auto max-w-5xl px-4 py-20 space-y-10">
+            <div className="text-center space-y-3">
+              <h2 className="text-3xl font-bold">Quem treinou, recomenda</h2>
+              <p className="text-muted-foreground">Avaliações reais de candidatos após as sessões.</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t) => (
+                <div key={t.created_at} className="flex flex-col rounded-xl border bg-card p-5 shadow-sm">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={`h-4 w-4 ${s <= t.rating ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    “{t.comment}”
+                  </p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-muted">
+                      {t.profiles?.avatar_url ? (
+                        <Image
+                          src={t.profiles.avatar_url}
+                          alt={t.profiles.full_name}
+                          fill
+                          className="object-cover"
+                          sizes="32px"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-xs font-semibold text-muted-foreground">
+                          {initialsOf(t.profiles?.full_name)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium">{t.profiles?.full_name ?? 'Candidato'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Trust signals */}
       <section className="border-t bg-muted/30">
         <div className="mx-auto max-w-4xl px-4 py-16">
@@ -153,7 +352,7 @@ export default async function Home() {
               </div>
               <div>
                 <p className="font-medium text-sm">Pagamento seguro</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">PIX ou cartão. Processado via AbacatePay.</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">PIX ou cartão. Processado via Pagar.me.</p>
               </div>
             </div>
             <div className="flex gap-4">
