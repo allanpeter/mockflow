@@ -77,8 +77,8 @@ export default async function AgendaPage() {
           has_feedback: feedbackSet.has(s.id),
         }
       })
-      upcoming = allSessions.filter((s) => s.starts_at >= now).reverse()
-      past = allSessions.filter((s) => s.starts_at < now)
+      upcoming = allSessions.filter((s) => s.ends_at > now).reverse()
+      past = allSessions.filter((s) => s.ends_at <= now)
     }
   } else {
     const { data } = await supabase
@@ -136,8 +136,8 @@ export default async function AgendaPage() {
         has_review: reviewedSet.has(s.id),
       }
     })
-    upcoming = allSessions.filter((s) => s.starts_at >= now).reverse()
-    past = allSessions.filter((s) => s.starts_at < now)
+    upcoming = allSessions.filter((s) => s.ends_at > now).reverse()
+    past = allSessions.filter((s) => s.ends_at <= now)
   }
 
   return (
