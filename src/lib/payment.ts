@@ -75,7 +75,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
         amount: amountInCents,
         checkout: {
           accepted_payment_methods: ['pix', 'credit_card'],
-          customer_editable: false,
+          customer_editable: true,
           skip_checkout_success_page: true,
           success_url: `${appUrl}/booking/${params.bookingId}/confirmation`,
           pix: { expires_in: 3600 },
