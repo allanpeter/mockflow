@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, Calendar, Clock, Video, Loader2 } from 'lucide-react'
+import { PaymentPoller } from '@/components/booking/payment-poller'
 
 interface Props {
   params: Promise<Readonly<{ bookingId: string }>>
@@ -33,10 +34,11 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
 
   const tutor = booking.tutor_profiles as unknown as { profiles: { full_name: string } }
 
-  // Payment still processing — webhook hasn't fired yet
+  // Payment still processing — polling until webhook or direct check confirms
   if (booking.status === 'pending_payment') {
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 py-16 text-center">
+        <PaymentPoller bookingId={bookingId} />
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
           <h1 className="text-2xl font-bold">Processando pagamento…</h1>
@@ -44,8 +46,6 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
             Aguarde enquanto confirmamos seu pagamento. Esta página atualiza automaticamente.
           </p>
         </div>
-        {/* Auto-refresh every 3s until confirmed */}
-        <meta httpEquiv="refresh" content="3" />
         <Button variant="outline" render={<Link href="/agenda" />}>
           Ver minha agenda
         </Button>
