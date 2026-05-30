@@ -56,23 +56,35 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
   const tutorName = booking.tutor_profiles?.tutor?.full_name ?? 'Entrevistador'
   const tutorAvatar = booking.tutor_profiles?.tutor?.avatar_url ?? null
 
-  const order = await createOrder({
-    bookingId: booking.id,
-    grossAmount: booking.gross_amount,
-    tutorAmount: booking.tutor_amount,
-    learnerEmail: user.email!,
-    learnerName: profile.full_name,
-    description: `Mock interview — ${tutorName}`,
-    tutorRecipientId: booking.tutor_profiles?.pagarme_recipient_id ?? null,
-    tutorAvatar,
-  })
+  let order: Awaited<ReturnType<typeof createOrder>>
+  try {
+    order = await createOrder({
+      bookingId: booking.id,
+      grossAmount: booking.gross_amount,
+      tutorAmount: booking.tutor_amount,
+      learnerEmail: user.email!,
+      learnerName: profile.full_name,
+      description: `Mock interview — ${tutorName}`,
+      tutorRecipientId: booking.tutor_profiles?.pagarme_recipient_id ?? null,
+      tutorAvatar,
+    })
+  } catch (err) {
+    console.error('[initiateBooking] createOrder failed:', err)
+    // Roll back the booking so the slot is freed and the user can retry
+    await admin.from('bookings').delete().eq('id', booking.id)
+    return { error: 'Não foi possível iniciar o pagamento. Tente novamente.' }
+  }
+
+  if (!order.checkoutUrl) {
+    console.error('[initiateBooking] Pagar.me returned no checkout URL for order', order.orderId)
+    await admin.from('bookings').delete().eq('id', booking.id)
+    return { error: 'Não foi possível gerar o link de pagamento. Tente novamente.' }
+  }
 
   await admin
     .from('bookings')
     .update({ pagarme_order_id: order.orderId })
     .eq('id', booking.id)
 
-  // Redirect to Pagar.me hosted checkout
-  // Pagar.me will redirect back to /booking/{id}/confirmation after payment
-  redirect(order.checkoutUrl!)
+  redirect(order.checkoutUrl)
 }
