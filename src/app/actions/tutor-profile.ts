@@ -1,10 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { ALL_TECHS } from '@/lib/tech-stack'
 import { INTERVIEW_FORMATS, SENIORITY_LEVELS, LANGUAGES } from '@/lib/tutor-options'
+import { upsertRecipient } from '@/lib/payment'
 
 const PIX_KEY_TYPES = ['cpf', 'cnpj', 'email', 'phone', 'random'] as const
 
@@ -35,6 +37,12 @@ const schema = z.object({
     .max(2000, 'Preço máximo: R$ 2000'),
   pix_key: z.string().min(1).optional().or(z.literal('')),
   pix_key_type: z.enum(PIX_KEY_TYPES).optional(),
+  cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos (só números)').optional().or(z.literal('')),
+  bank_code: z.string().min(1).max(10).optional().or(z.literal('')),
+  bank_agency: z.string().min(1).max(10).optional().or(z.literal('')),
+  bank_account: z.string().min(1).max(20).optional().or(z.literal('')),
+  bank_account_digit: z.string().min(1).max(2).optional().or(z.literal('')),
+  bank_account_type: z.enum(['checking', 'savings']).optional(),
 })
 
 export type TutorProfileFormState =
@@ -81,6 +89,12 @@ export async function upsertTutorProfile(
     price_per_session: formData.get('price_per_session'),
     pix_key: formData.get('pix_key') || undefined,
     pix_key_type: formData.get('pix_key_type') || undefined,
+    cpf: formData.get('cpf') || undefined,
+    bank_code: formData.get('bank_code') || undefined,
+    bank_agency: formData.get('bank_agency') || undefined,
+    bank_account: formData.get('bank_account') || undefined,
+    bank_account_digit: formData.get('bank_account_digit') || undefined,
+    bank_account_type: formData.get('bank_account_type') || undefined,
   }
 
   const parsed = schema.safeParse(raw)
@@ -106,6 +120,12 @@ export async function upsertTutorProfile(
     intro_video_url: parsed.data.intro_video_url || null,
     pix_key: parsed.data.pix_key || null,
     pix_key_type: parsed.data.pix_key_type ?? null,
+    cpf: parsed.data.cpf || null,
+    bank_code: parsed.data.bank_code || null,
+    bank_agency: parsed.data.bank_agency || null,
+    bank_account: parsed.data.bank_account || null,
+    bank_account_digit: parsed.data.bank_account_digit || null,
+    bank_account_type: parsed.data.bank_account_type ?? null,
   }
 
   const { error } = existing
@@ -122,6 +142,41 @@ export async function upsertTutorProfile(
       })
 
   if (error) return { status: 'server_error', message: error.message }
+
+  // Create/update Pagar.me recipient when bank account is complete
+  const hasBankDetails = payload.cpf && payload.bank_code && payload.bank_agency &&
+    payload.bank_account && payload.bank_account_digit && payload.bank_account_type
+
+  if (hasBankDetails) {
+    try {
+      const admin = createAdminClient()
+      const { data: tutorProfile } = await admin
+        .from('tutor_profiles')
+        .select('pagarme_recipient_id, profiles ( full_name )')
+        .eq('user_id', user.id)
+        .single<{ pagarme_recipient_id: string | null; profiles: { full_name: string } }>()
+
+      const { recipientId } = await upsertRecipient({
+        name: tutorProfile?.profiles?.full_name ?? payload.cpf!,
+        email: user.email!,
+        cpf: payload.cpf!,
+        bankCode: payload.bank_code!,
+        bankAgency: payload.bank_agency!,
+        bankAccount: payload.bank_account!,
+        bankAccountDigit: payload.bank_account_digit!,
+        bankAccountType: payload.bank_account_type!,
+        existingRecipientId: tutorProfile?.pagarme_recipient_id,
+      })
+
+      await admin
+        .from('tutor_profiles')
+        .update({ pagarme_recipient_id: recipientId })
+        .eq('user_id', user.id)
+    } catch (err) {
+      console.error('[upsertTutorProfile] upsertRecipient falhou:', err)
+      // Non-fatal: profile is saved, recipient will be retried on next save
+    }
+  }
 
   revalidatePath('/dashboard/profile')
   return { status: 'success' }

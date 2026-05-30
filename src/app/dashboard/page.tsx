@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { UserCircle, CalendarDays, Search, Calendar, TrendingUp } from 'lucide-react'
+import { UserCircle, CalendarDays, Search, Calendar, TrendingUp, Wallet, ShieldCheck } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -21,6 +21,7 @@ export default async function DashboardPage() {
     .single<{ full_name: string; role: string }>()
 
   const isTutor = profile?.role === 'tutor'
+  const isAdmin = profile?.role === 'admin'
 
   // Fetch session counts for a quick summary
   let upcomingCount = 0
@@ -108,6 +109,26 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold">Olá, {firstName}</h1>
       </div>
 
+      {/* Admin panel */}
+      {isAdmin && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Painel admin</span>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" render={<Link href="/admin/payouts" />}>
+                Repasses
+              </Button>
+              <Button size="sm" variant="outline" render={<Link href="/admin/users" />}>
+                Usuários
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border bg-card p-5 space-y-1">
@@ -164,7 +185,7 @@ export default async function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="sm:col-span-2">
+              <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
@@ -179,6 +200,25 @@ export default async function DashboardPage() {
                 <CardContent>
                   <Button variant="outline" render={<Link href="/agenda" />} className="w-full">
                     Ver agenda
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted">
+                      <Wallet className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Ganhos</CardTitle>
+                      <CardDescription className="text-xs">Repasses pendentes e histórico</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" render={<Link href="/dashboard/earnings" />} className="w-full">
+                    Ver ganhos
                   </Button>
                 </CardContent>
               </Card>

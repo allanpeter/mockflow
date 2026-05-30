@@ -15,6 +15,8 @@ export async function GET(request: Request) {
   const admin = createAdminClient()
 
   // Find pending payouts where the session has ended
+  const now = new Date().toISOString()
+
   const { data: payouts, error } = await admin
     .from('payouts')
     .select(`
@@ -24,13 +26,15 @@ export async function GET(request: Request) {
         sessions ( id, ends_at, status )
       ),
       tutor_profiles!inner (
+        pagarme_recipient_id,
         pix_key,
         pix_key_type,
         profiles ( full_name )
       )
     `)
     .eq('status', 'pending')
-    .not('tutor_profiles.pix_key', 'is', null)
+    .lte('release_at', now)
+    .not('tutor_profiles.pagarme_recipient_id', 'is', null)
 
   if (error) {
     console.error('[cron/payouts]', error)
@@ -46,18 +50,14 @@ export async function GET(request: Request) {
       sessions: { id: string; ends_at: string; status: string }
     }
     const tutorProfile = payout.tutor_profiles as unknown as {
-      pix_key: string
-      pix_key_type: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random'
+      pagarme_recipient_id: string
+      pix_key: string | null
+      pix_key_type: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random' | null
       profiles: { full_name: string }
     }
 
     const session = booking?.sessions
     if (!session) continue
-
-    // Only pay out for sessions that are done
-    const sessionEnded = new Date(session.ends_at) < new Date()
-    const sessionDone = session.status === 'completed' || sessionEnded
-    if (!sessionDone) continue
 
     try {
       await admin
@@ -67,8 +67,8 @@ export async function GET(request: Request) {
 
       const { transferId } = await sendPayout({
         tutorId: payout.tutor_id,
-        pixKey: tutorProfile.pix_key,
-        pixKeyType: tutorProfile.pix_key_type,
+        pixKey: tutorProfile.pix_key ?? '',
+        pixKeyType: tutorProfile.pix_key_type ?? 'random',
         amount: payout.amount,
         description: `MockFlow — sessão ${booking.id.slice(0, 8)}`,
       })

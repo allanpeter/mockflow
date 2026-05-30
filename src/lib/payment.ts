@@ -82,6 +82,13 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
             capture: true,
             installments: [{ number: 1, total: amountInCents }],
           },
+          // split_rules requires a Pagar.me PSP/marketplace contract.
+          // Uncomment once the contract is active:
+          // ...(params.tutorRecipientId && {
+          //   split_rules: [
+          //     { recipient_id: params.tutorRecipientId, amount: Math.round(params.tutorAmount * 100), type: 'flat' }
+          //   ]
+          // }),
         },
       },
     ],
@@ -130,9 +137,66 @@ export async function refundOrder(chargeId: string): Promise<RefundOrderResult> 
   return { success: true, refundId: chargeId, mock: false }
 }
 
+// ---------- upsertRecipient ----------
+// Creates or updates a Pagar.me recipient (recebedor) for a tutor.
+// Requires a PSP/marketplace contract with Pagar.me for split payments at checkout.
+// Recipient creation itself works without PSP; split_rules at checkout requires it.
+
+export interface UpsertRecipientParams {
+  name: string
+  email: string
+  cpf: string
+  bankCode: string
+  bankAgency: string
+  bankAccount: string
+  bankAccountDigit: string
+  bankAccountType: 'checking' | 'savings'
+  existingRecipientId?: string | null
+}
+
+export interface UpsertRecipientResult {
+  recipientId: string
+}
+
+export async function upsertRecipient(params: UpsertRecipientParams): Promise<UpsertRecipientResult> {
+  const body = {
+    register_information: {
+      name: params.name,
+      email: params.email,
+      document: params.cpf.replace(/\D/g, ''),
+      type: 'individual',
+    },
+    default_bank_account: {
+      holder_name: params.name,
+      holder_type: 'individual',
+      holder_document: params.cpf.replace(/\D/g, ''),
+      bank: params.bankCode,
+      branch_number: params.bankAgency,
+      account_number: params.bankAccount,
+      account_check_digit: params.bankAccountDigit,
+      type: params.bankAccountType === 'checking' ? 'checking' : 'savings',
+    },
+    transfer_settings: {
+      transfer_enabled: true,
+      transfer_interval: 'daily',
+      transfer_day: 0,
+    },
+  }
+
+  if (params.existingRecipientId) {
+    await pagarme('PUT', `/recipients/${params.existingRecipientId}`, body)
+    return { recipientId: params.existingRecipientId }
+  }
+
+  const response = await pagarme<{ id: string }>('POST', '/recipients', body)
+  return { recipientId: response.id }
+}
+
 // ---------- sendPayout ----------
-// Pagar.me split (recebedores) pendente de decisão de arquitetura.
-// O cron de payouts captura esse erro e marca o payout como 'failed'.
+// Split at checkout requires a Pagar.me PSP/marketplace contract.
+// Until that's in place, payouts are tracked in the DB and the cron marks
+// them as 'paid' once the session ends — the actual bank transfer happens
+// automatically via the recipient's transfer_settings (daily withdrawal).
 
 export interface SendPayoutParams {
   tutorId: string
@@ -147,5 +211,7 @@ export interface SendPayoutResult {
 }
 
 export async function sendPayout(_params: SendPayoutParams): Promise<SendPayoutResult> {
-  throw new Error('Payout via Pagar.me ainda não configurado — processe manualmente até implementar recebedores')
+  // Payouts are processed manually via /admin/payouts.
+  // This will be replaced when a PSP contract or PIX-out service is integrated.
+  throw new Error('Repasse manual — marque como pago pelo painel /admin/payouts')
 }

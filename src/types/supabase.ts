@@ -9,7 +9,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type UserRole = 'tutor' | 'learner'
+export type UserRole = 'tutor' | 'learner' | 'admin'
 export type BookingStatus = 'pending_payment' | 'confirmed' | 'cancelled' | 'completed'
 export type SessionStatus = 'scheduled' | 'in_progress' | 'completed' | 'no_show'
 export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'failed'
@@ -46,6 +46,12 @@ type TutorProfileRow = {
   pagarme_recipient_id: string | null
   pix_key: string | null
   pix_key_type: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random' | null
+  cpf: string | null
+  bank_code: string | null
+  bank_agency: string | null
+  bank_account: string | null
+  bank_account_digit: string | null
+  bank_account_type: 'checking' | 'savings' | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -105,6 +111,7 @@ type PayoutRow = {
   status: PayoutStatus
   transfer_id: string | null
   paid_at: string | null
+  release_at: string | null
   created_at: string
   updated_at: string
 }

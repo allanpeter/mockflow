@@ -282,36 +282,90 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
         </p>
       </div>
 
-      {/* PIX key for payouts */}
-      <div className="space-y-3">
-        <Label>Chave PIX para recebimentos</Label>
-        <p className="text-xs text-muted-foreground">
-          Após cada sessão concluída, transferimos automaticamente 90% do valor para sua chave PIX.
-        </p>
-        <div className="flex gap-2">
-          <select
-            name="pix_key_type"
-            defaultValue={profile?.pix_key_type ?? ''}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="" disabled>
-              Tipo
-            </option>
-            <option value="cpf">CPF</option>
-            <option value="cnpj">CNPJ</option>
-            <option value="email">E-mail</option>
-            <option value="phone">Telefone</option>
-            <option value="random">Aleatória</option>
-          </select>
-          <Input
-            id="pix_key"
-            name="pix_key"
-            placeholder="Sua chave PIX"
-            defaultValue={profile?.pix_key ?? ''}
-            className="flex-1"
-          />
+      {/* Bank account for payouts */}
+      <div className="space-y-4">
+        <div>
+          <Label>Dados bancários para recebimento</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Você recebe 90% do valor de cada sessão. Os repasses são processados todo final de mês via transferência bancária.
+          </p>
         </div>
-        {errors.pix_key && <p className="text-sm text-destructive">{errors.pix_key[0]}</p>}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="cpf" className="text-sm">CPF</Label>
+            <Input
+              id="cpf"
+              name="cpf"
+              placeholder="00000000000"
+              defaultValue={profile?.cpf ?? ''}
+              maxLength={11}
+            />
+            {errors.cpf && <p className="text-xs text-destructive">{errors.cpf[0]}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bank_code" className="text-sm">Código do banco</Label>
+            <Input
+              id="bank_code"
+              name="bank_code"
+              placeholder="260 (Nubank), 341 (Itaú)…"
+              defaultValue={profile?.bank_code ?? ''}
+              maxLength={10}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bank_agency" className="text-sm">Agência (sem dígito)</Label>
+            <Input
+              id="bank_agency"
+              name="bank_agency"
+              placeholder="0001"
+              defaultValue={profile?.bank_agency ?? ''}
+              maxLength={10}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bank_account_type" className="text-sm">Tipo de conta</Label>
+            <select
+              id="bank_account_type"
+              name="bank_account_type"
+              defaultValue={profile?.bank_account_type ?? ''}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="" disabled>Selecionar…</option>
+              <option value="checking">Corrente</option>
+              <option value="savings">Poupança</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bank_account" className="text-sm">Número da conta</Label>
+            <Input
+              id="bank_account"
+              name="bank_account"
+              placeholder="12345678"
+              defaultValue={profile?.bank_account ?? ''}
+              maxLength={20}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="bank_account_digit" className="text-sm">Dígito verificador</Label>
+            <Input
+              id="bank_account_digit"
+              name="bank_account_digit"
+              placeholder="9"
+              defaultValue={profile?.bank_account_digit ?? ''}
+              maxLength={2}
+            />
+          </div>
+        </div>
+
+        {profile?.pagarme_recipient_id && (
+          <p className="text-xs text-green-600">✓ Conta bancária verificada na Pagar.me</p>
+        )}
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">

@@ -2,6 +2,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createMeeting } from '@/lib/meeting'
 import { sendBookingConfirmedLearner, sendNewBookingTutor } from '@/lib/email'
 
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999)
+}
+
 interface ConfirmBookingParams {
   bookingId: string
   orderId: string
@@ -70,6 +74,7 @@ export async function confirmBooking({ bookingId, orderId, chargeId }: ConfirmBo
       amount: booking.tutor_amount,
       transfer_id: null,
       paid_at: null,
+      release_at: endOfMonth(new Date(slot.ends_at)).toISOString(),
     }, { onConflict: 'booking_id', ignoreDuplicates: true }),
   ])
 
