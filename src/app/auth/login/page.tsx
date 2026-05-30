@@ -33,7 +33,6 @@ function LoginForm() {
   const redirectedFrom = searchParams.get('redirectedFrom') ?? '/dashboard'
   const [googleLoading, setGoogleLoading] = useState(false)
   const supabase = createClient()
-
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
@@ -49,18 +48,9 @@ function LoginForm() {
     router.refresh()
   }
 
-  async function signInWithGoogle() {
+  function signInWithGoogle() {
     setGoogleLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${globalThis.location.origin}/auth/callback?next=${redirectedFrom}`,
-      },
-    })
-    if (error) {
-      toast.error('Erro ao entrar com Google.')
-      setGoogleLoading(false)
-    }
+    globalThis.location.href = `/api/auth/google?next=${encodeURIComponent(redirectedFrom)}`
   }
 
   return (

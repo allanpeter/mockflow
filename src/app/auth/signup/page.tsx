@@ -63,19 +63,9 @@ export default function SignupPage() {
     setStep('confirm')
   }
 
-  async function signUpWithGoogle(role: 'tutor' | 'learner') {
+  function signUpWithGoogle(role: 'tutor' | 'learner') {
     setGoogleLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${globalThis.location.origin}/auth/callback`,
-        queryParams: { role },  // passed via state, handled in callback
-      },
-    })
-    if (error) {
-      toast.error('Erro ao continuar com Google.')
-      setGoogleLoading(false)
-    }
+    globalThis.location.href = `/api/auth/google?role=${role}`
   }
 
   if (step === 'confirm') {
