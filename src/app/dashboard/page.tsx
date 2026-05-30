@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { UserCircle, CalendarDays, Search, Calendar } from 'lucide-react'
+import { UserCircle, CalendarDays, Search, Calendar, TrendingUp } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -68,6 +68,32 @@ export default async function DashboardPage() {
 
     upcomingCount = upcoming ?? 0
     totalCount = total ?? 0
+  }
+
+  // Latest feedback stats for learner progress card
+  let latestFeedbackAvg: number | null = null
+  let latestSeniority: string | null = null
+  let feedbackCount = 0
+  if (!isTutor) {
+    const { data: feedbackRows } = await supabase
+      .from('session_feedback')
+      .select('score_communication, score_technical, score_architecture, score_problem_solving, score_soft_skills, score_maturity, estimated_seniority')
+      .eq('learner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    const rows = feedbackRows ?? []
+    feedbackCount = rows.length
+
+    if (rows.length > 0) {
+      const dimKeys = ['score_communication', 'score_technical', 'score_architecture', 'score_problem_solving', 'score_soft_skills', 'score_maturity'] as const
+      const latest = rows[0] as Record<string, number | null | string>
+      const scores = dimKeys.map((k) => latest[k] as number | null).filter((v) => v != null) as number[]
+      if (scores.length > 0) {
+        latestFeedbackAvg = scores.reduce((a, b) => a + b, 0) / scores.length
+      }
+      latestSeniority = (rows.find((r) => (r as Record<string, unknown>)['estimated_seniority']) as Record<string, unknown> | undefined)?.['estimated_seniority'] as string | null ?? null
+    }
   }
 
   const firstName = profile?.full_name?.split(' ')[0] ?? user.email
@@ -196,6 +222,31 @@ export default async function DashboardPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {feedbackCount > 0 && (
+                <Card className="sm:col-span-2 border-primary/20 bg-brand-muted">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-base">Meu progresso</CardTitle>
+                        <CardDescription className="text-xs">
+                          {feedbackCount} {feedbackCount === 1 ? 'sessão avaliada' : 'sessões avaliadas'}
+                          {latestFeedbackAvg !== null && ` · Média ${latestFeedbackAvg.toFixed(1)}/5`}
+                          {latestSeniority && ` · ${latestSeniority}`}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Button render={<Link href="/progresso" />} className="w-full">
+                      Ver evolução completa
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
         </div>

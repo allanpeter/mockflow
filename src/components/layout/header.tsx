@@ -42,10 +42,18 @@ export function Header() {
 async function HeaderAuthNav() {
   const current = await getCurrentUser()
   if (!current) return null
+  const isLearner = current.profile?.role === 'learner'
   return (
-    <Link href="/agenda" className="text-muted-foreground transition-colors hover:text-foreground">
-      Minha Agenda
-    </Link>
+    <>
+      <Link href="/agenda" className="text-muted-foreground transition-colors hover:text-foreground">
+        Minha Agenda
+      </Link>
+      {isLearner && (
+        <Link href="/progresso" className="text-muted-foreground transition-colors hover:text-foreground">
+          Progresso
+        </Link>
+      )}
+    </>
   )
 }
 

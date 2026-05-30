@@ -21,6 +21,7 @@ type ProfileRow = {
   full_name: string
   avatar_url: string | null
   phone: string | null
+  goal_seniority: 'Júnior' | 'Pleno' | 'Sênior' | 'Staff+' | null
   created_at: string
   updated_at: string
 }
@@ -108,6 +109,26 @@ type PayoutRow = {
   updated_at: string
 }
 
+export type SeniorityLevel = 'Júnior' | 'Pleno' | 'Sênior' | 'Staff+'
+
+export type SessionFeedbackRow = {
+  id: string
+  session_id: string
+  tutor_id: string
+  learner_id: string
+  score_communication: number | null
+  score_technical: number | null
+  score_architecture: number | null
+  score_problem_solving: number | null
+  score_soft_skills: number | null
+  score_maturity: number | null
+  estimated_seniority: SeniorityLevel | null
+  what_went_well: string | null
+  what_to_improve: string | null
+  evolution_plan: string | null
+  created_at: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -151,6 +172,12 @@ export type Database = {
         Row: PayoutRow
         Insert: Omit<PayoutRow, 'id' | 'status' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<PayoutRow, 'id' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      session_feedback: {
+        Row: SessionFeedbackRow
+        Insert: Omit<SessionFeedbackRow, 'id' | 'created_at'>
+        Update: Record<string, never>
         Relationships: []
       }
     }

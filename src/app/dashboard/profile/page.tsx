@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TutorProfileForm } from '@/components/tutor/profile-form'
 import { AvatarUpload } from '@/components/tutor/avatar-upload'
 import { ActiveToggle } from '@/components/tutor/active-toggle'
+import { ProfileCompleteness } from '@/components/tutor/profile-completeness'
 import { Separator } from '@/components/ui/separator'
 
 export default async function TutorProfilePage() {
@@ -38,6 +39,14 @@ export default async function TutorProfilePage() {
           Configure como você aparece para os candidatos
         </p>
       </div>
+
+      {/* Profile completeness widget */}
+      {tutorProfile && (
+        <ProfileCompleteness
+          profile={tutorProfile as unknown as import('@/types/supabase').Database['public']['Tables']['tutor_profiles']['Row']}
+          hasAvatar={!!profile?.avatar_url}
+        />
+      )}
 
       {/* Avatar */}
       <AvatarUpload

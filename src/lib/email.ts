@@ -375,3 +375,158 @@ export async function sendSessionReminder(opts: {
   const template = sessionReminder(opts)
   return resend.emails.send({ from: FROM, to: opts.to, ...template })
 }
+
+// ---------- liquidity / retention templates ----------
+
+function reviewPrompt(opts: { learnerName: string; tutorName: string; reviewUrl: string }) {
+  return {
+    subject: `Como foi sua sessão com ${opts.tutorName}? — MockFlow`,
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff"><span style="color:#a78bfa">Mock</span>Flow</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Como foi sua sessão?</p>
+          <p style="margin:0 0 24px;color:#71717a">
+            Olá, ${opts.learnerName}! Sua sessão com <strong>${opts.tutorName}</strong> já aconteceu.
+            Avaliações ajudam outros candidatos a escolher o entrevistador certo — leva menos de 1 minuto.
+          </p>
+          <a href="${opts.reviewUrl}" style="display:block;text-align:center;background:#5b4cf3;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:16px">
+            Avaliar sessão agora
+          </a>
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            Sua avaliação ficará pública no perfil do entrevistador.
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">MockFlow · <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Ajuda</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+function feedbackPrompt(opts: { tutorName: string; learnerName: string; feedbackUrl: string }) {
+  return {
+    subject: `Envie o feedback para ${opts.learnerName} — MockFlow`,
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff"><span style="color:#a78bfa">Mock</span>Flow</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">O candidato aguarda seu feedback</p>
+          <p style="margin:0 0 24px;color:#71717a">
+            Olá, ${opts.tutorName}! Sua sessão com <strong>${opts.learnerName}</strong> já encerrou.
+            O feedback estruturado é o principal diferencial do MockFlow — candidatos que recebem o plano de evolução voltam com muito mais frequência.
+          </p>
+          <a href="${opts.feedbackUrl}" style="display:block;text-align:center;background:#5b4cf3;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:16px">
+            Enviar feedback agora
+          </a>
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            O feedback é privado — apenas o candidato terá acesso.
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">MockFlow · <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Ajuda</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+function tutorReactivation(opts: { tutorName: string; availabilityUrl: string }) {
+  return {
+    subject: 'Sua agenda está vazia — candidatos te procuram — MockFlow',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff"><span style="color:#a78bfa">Mock</span>Flow</p>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Sua agenda está sem horários</p>
+          <p style="margin:0 0 24px;color:#71717a">
+            Olá, ${opts.tutorName}! Candidatos visitaram seu perfil mas não encontraram horários disponíveis.
+            Adicione slots à sua agenda para não perder agendamentos.
+          </p>
+          <a href="${opts.availabilityUrl}" style="display:block;text-align:center;background:#5b4cf3;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:16px">
+            Abrir minha agenda
+          </a>
+        </td></tr>
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">MockFlow · <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Ajuda</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+export async function sendReviewPrompt(opts: {
+  to: string
+  learnerName: string
+  tutorName: string
+  sessionId: string
+  appUrl: string
+}) {
+  const template = reviewPrompt({
+    learnerName: opts.learnerName,
+    tutorName: opts.tutorName,
+    reviewUrl: `${opts.appUrl}/agenda/${opts.sessionId}/review`,
+  })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}
+
+export async function sendFeedbackPrompt(opts: {
+  to: string
+  tutorName: string
+  learnerName: string
+  sessionId: string
+  appUrl: string
+}) {
+  const template = feedbackPrompt({
+    tutorName: opts.tutorName,
+    learnerName: opts.learnerName,
+    feedbackUrl: `${opts.appUrl}/agenda/${opts.sessionId}/feedback`,
+  })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}
+
+export async function sendTutorReactivation(opts: {
+  to: string
+  tutorName: string
+  appUrl: string
+}) {
+  const template = tutorReactivation({
+    tutorName: opts.tutorName,
+    availabilityUrl: `${opts.appUrl}/dashboard/availability`,
+  })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}
