@@ -113,7 +113,7 @@ export default function PrecosPage() {
           </table>
         </div>
         <p className="text-center text-sm text-muted-foreground">
-          O repasse é feito automaticamente via Pagar.me após a conclusão da sessão.
+          O repasse ao entrevistador é realizado todo final de mês via transferência bancária.
         </p>
       </section>
 

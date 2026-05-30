@@ -131,14 +131,14 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border bg-card p-5 space-y-1">
+        <Link href="/agenda" className="rounded-xl border bg-card p-5 space-y-1 hover:border-primary/50 hover:bg-accent transition-colors">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Próximas sessões</p>
           <p className="text-3xl font-bold">{upcomingCount}</p>
-        </div>
-        <div className="rounded-xl border bg-card p-5 space-y-1">
+        </Link>
+        <Link href="/agenda" className="rounded-xl border bg-card p-5 space-y-1 hover:border-primary/50 hover:bg-accent transition-colors">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Total de sessões</p>
           <p className="text-3xl font-bold">{totalCount}</p>
-        </div>
+        </Link>
       </div>
 
       {/* Actions */}

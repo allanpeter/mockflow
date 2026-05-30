@@ -38,8 +38,9 @@ export function PayoutRow({ payout }: Readonly<{ payout: Payout }>) {
   const tutor = payout.tutor_profiles
   const booking = payout.bookings
   const sessionDate = booking?.sessions?.starts_at
-    ? new Date(booking.sessions.starts_at).toLocaleDateString('pt-BR', {
+    ? new Date(booking.sessions.starts_at).toLocaleString('pt-BR', {
         day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
       })
     : '—'
 

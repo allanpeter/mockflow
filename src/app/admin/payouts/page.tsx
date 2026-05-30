@@ -58,9 +58,11 @@ export default async function AdminPayoutsPage() {
     return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  function formatDate(iso: string | null) {
+  function formatDate(iso: string | null, includeTime = false) {
     if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }
+    if (includeTime) { opts.hour = '2-digit'; opts.minute = '2-digit' }
+    return new Date(iso).toLocaleString('pt-BR', opts)
   }
 
   type PendingPayout = typeof pending extends (infer T)[] | null ? T : never
@@ -116,7 +118,7 @@ export default async function AdminPayoutsPage() {
                   <div>
                     <p className="font-medium">{tutor?.profiles?.full_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Sessão com {booking?.profiles?.full_name} · {formatDate(booking?.sessions?.starts_at ?? null)}
+                      Sessão com {booking?.profiles?.full_name} · {formatDate(booking?.sessions?.starts_at ?? null, true)}
                     </p>
                   </div>
                   <div className="text-right">

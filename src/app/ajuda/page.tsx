@@ -29,7 +29,7 @@ const faqs = [
       },
       {
         q: 'Quando o entrevistador recebe o pagamento?',
-        a: 'O repasse é feito automaticamente via Pagar.me após a conclusão da sessão. O entrevistador recebe 90% do valor.',
+        a: 'O repasse ao entrevistador é feito todo final de mês via transferência bancária. O entrevistador recebe 90% do valor de cada sessão realizada.',
       },
       {
         q: 'Há alguma taxa para candidatos?',
