@@ -11,8 +11,8 @@ export default async function DashboardPage() {
   if (!current) redirect('/auth/login')
 
   const { id: userId, profile } = current
-  const isTutor = profile?.role === 'tutor'
   const isAdmin = profile?.role === 'admin'
+  const isTutor = profile?.role === 'tutor' || isAdmin
   const firstName = profile?.full_name?.split(' ')[0] ?? 'você'
 
   const supabase = await createClient()
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
-          {isTutor ? 'Painel do entrevistador' : 'Painel do candidato'}
+          {isAdmin ? 'Painel do admin' : isTutor ? 'Painel do entrevistador' : 'Painel do candidato'}
         </p>
         <h1 className="text-2xl font-bold">Olá, {firstName}</h1>
       </div>

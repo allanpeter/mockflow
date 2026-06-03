@@ -57,7 +57,7 @@ export function UserMenu({ profile }: Readonly<Props>) {
           <DropdownMenuLabel className="font-normal">
             <p className="font-medium text-foreground">{profile.full_name}</p>
             <p className="text-xs text-muted-foreground capitalize">
-              {profile.role === 'tutor' ? 'Entrevistador' : 'Candidato'}
+              {profile.role === 'admin' ? 'Admin' : profile.role === 'tutor' ? 'Entrevistador' : 'Candidato'}
             </p>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
@@ -70,7 +70,7 @@ export function UserMenu({ profile }: Readonly<Props>) {
             Dashboard
           </DropdownMenuItem>
 
-          {profile.role === 'tutor' && (
+          {(profile.role === 'tutor' || profile.role === 'admin') && (
             <>
               <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
                 <User />

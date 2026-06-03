@@ -14,7 +14,7 @@ export default async function GanhosPage() {
     .eq('id', user.id)
     .single<{ role: string }>()
 
-  if (profile?.role !== 'tutor') redirect('/dashboard')
+  if (profile?.role !== 'tutor' && profile?.role !== 'admin') redirect('/dashboard')
 
   const { data: tutorProfile } = await supabase
     .from('tutor_profiles')

@@ -29,7 +29,7 @@ export default async function TutorProfilePage() {
       .maybeSingle(),
   ])
 
-  if (profile?.role !== 'tutor') redirect('/dashboard')
+  if (profile?.role !== 'tutor' && profile?.role !== 'admin') redirect('/dashboard')
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">

@@ -14,7 +14,7 @@ export default async function AgendaPage() {
   if (!current) redirect('/auth/login?redirectedFrom=/agenda')
 
   const { id: userId, profile } = current
-  const isTutor = profile?.role === 'tutor'
+  const isTutor = profile?.role === 'tutor' || profile?.role === 'admin'
   const now = new Date().toISOString()
 
   const supabase = await createClient()
