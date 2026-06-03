@@ -1,27 +1,21 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { UserCircle, CalendarDays, Search, Calendar, TrendingUp, Wallet, ShieldCheck } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const current = await getCurrentUser()
+  if (!current) redirect('/auth/login')
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect('/auth/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, role')
-    .eq('id', user.id)
-    .single<{ full_name: string; role: string }>()
-
+  const { id: userId, profile } = current
   const isTutor = profile?.role === 'tutor'
   const isAdmin = profile?.role === 'admin'
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'você'
+
+  const supabase = await createClient()
 
   // Fetch session counts for a quick summary
   let upcomingCount = 0
@@ -31,42 +25,42 @@ export default async function DashboardPage() {
     const { data: tutorProfile } = await supabase
       .from('tutor_profiles')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single<{ id: string }>()
 
     if (tutorProfile) {
       const now = new Date().toISOString()
-      const { count: upcoming } = await supabase
-        .from('bookings')
-        .select('sessions!inner(id)', { count: 'exact', head: true })
-        .eq('tutor_id', tutorProfile.id)
-        .eq('status', 'confirmed')
-        .gte('sessions.starts_at', now)
-
-      const { count: total } = await supabase
-        .from('bookings')
-        .select('sessions!inner(id)', { count: 'exact', head: true })
-        .eq('tutor_id', tutorProfile.id)
-        .eq('status', 'confirmed')
-
+      const [{ count: upcoming }, { count: total }] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('sessions!inner(id)', { count: 'exact', head: true })
+          .eq('tutor_id', tutorProfile.id)
+          .eq('status', 'confirmed')
+          .gte('sessions.starts_at', now),
+        supabase
+          .from('bookings')
+          .select('sessions!inner(id)', { count: 'exact', head: true })
+          .eq('tutor_id', tutorProfile.id)
+          .eq('status', 'confirmed'),
+      ])
       upcomingCount = upcoming ?? 0
       totalCount = total ?? 0
     }
   } else {
     const now = new Date().toISOString()
-    const { count: upcoming } = await supabase
-      .from('bookings')
-      .select('sessions!inner(id)', { count: 'exact', head: true })
-      .eq('learner_id', user.id)
-      .eq('status', 'confirmed')
-      .gte('sessions.starts_at', now)
-
-    const { count: total } = await supabase
-      .from('bookings')
-      .select('sessions!inner(id)', { count: 'exact', head: true })
-      .eq('learner_id', user.id)
-      .eq('status', 'confirmed')
-
+    const [{ count: upcoming }, { count: total }] = await Promise.all([
+      supabase
+        .from('bookings')
+        .select('sessions!inner(id)', { count: 'exact', head: true })
+        .eq('learner_id', userId)
+        .eq('status', 'confirmed')
+        .gte('sessions.starts_at', now),
+      supabase
+        .from('bookings')
+        .select('sessions!inner(id)', { count: 'exact', head: true })
+        .eq('learner_id', userId)
+        .eq('status', 'confirmed'),
+    ])
     upcomingCount = upcoming ?? 0
     totalCount = total ?? 0
   }
@@ -79,7 +73,7 @@ export default async function DashboardPage() {
     const { data: feedbackRows } = await supabase
       .from('session_feedback')
       .select('score_communication, score_technical, score_architecture, score_problem_solving, score_soft_skills, score_maturity, estimated_seniority')
-      .eq('learner_id', user.id)
+      .eq('learner_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
 
@@ -96,8 +90,6 @@ export default async function DashboardPage() {
       latestSeniority = (rows.find((r) => (r as Record<string, unknown>)['estimated_seniority']) as Record<string, unknown> | undefined)?.['estimated_seniority'] as string | null ?? null
     }
   }
-
-  const firstName = profile?.full_name?.split(' ')[0] ?? user.email
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">

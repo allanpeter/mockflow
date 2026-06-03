@@ -6,27 +6,25 @@ import { TutorsGrid, type TutorCard } from '@/components/tutors/tutors-grid'
 export default async function TutorsPage() {
   const supabase = await createClient()
 
-  const { data: tutors } = await supabase
-    .from('tutor_profiles')
-    .select(`
-      id,
-      bio,
-      headline,
-      years_experience,
-      tech_stack,
-      price_per_session,
-      languages,
-      seniority_levels,
-      interview_formats,
-      companies,
-      profiles ( full_name, avatar_url ),
-      reviews ( rating )
-    `)
-    .eq('is_active', true)
-    .order('created_at')
-
-  // Aggregated stats + earliest available slot, fetched in bulk to avoid N+1.
-  const [{ data: statsRows }, { data: slotRows }] = await Promise.all([
+  const [{ data: tutors }, { data: statsRows }, { data: slotRows }] = await Promise.all([
+    supabase
+      .from('tutor_profiles')
+      .select(`
+        id,
+        bio,
+        headline,
+        years_experience,
+        tech_stack,
+        price_per_session,
+        languages,
+        seniority_levels,
+        interview_formats,
+        companies,
+        profiles ( full_name, avatar_url ),
+        reviews ( rating )
+      `)
+      .eq('is_active', true)
+      .order('created_at'),
     supabase.from('tutor_stats').select('tutor_id, completed_sessions, return_rate'),
     supabase
       .from('availability_slots')

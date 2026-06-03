@@ -41,21 +41,20 @@ export default async function ProgressoPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?redirectedFrom=/progresso')
 
-  // Must be a learner
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name, goal_seniority')
-    .eq('id', user.id)
-    .maybeSingle<{ role: string; full_name: string; goal_seniority: SeniorityLevel | null }>()
+  const [{ data: profile }, { data: rawFeedback }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role, full_name, goal_seniority')
+      .eq('id', user.id)
+      .maybeSingle<{ role: string; full_name: string; goal_seniority: SeniorityLevel | null }>(),
+    supabase
+      .from('session_feedback')
+      .select('*')
+      .eq('learner_id', user.id)
+      .order('created_at', { ascending: true }),
+  ])
 
   if (profile?.role === 'tutor') redirect('/dashboard')
-
-  // All feedback for this learner, newest first
-  const { data: rawFeedback } = await supabase
-    .from('session_feedback')
-    .select('*')
-    .eq('learner_id', user.id)
-    .order('created_at', { ascending: true })
 
   const feedbacks = (rawFeedback ?? []) as SessionFeedbackRow[]
 

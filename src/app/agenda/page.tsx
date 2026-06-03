@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/get-current-user'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
@@ -9,21 +10,14 @@ import { Calendar, Clock, Video, Star, ClipboardList, TrendingUp } from 'lucide-
 import { CancelButton } from '@/components/booking/cancel-button'
 
 export default async function AgendaPage() {
-  const supabase = await createClient()
+  const current = await getCurrentUser()
+  if (!current) redirect('/auth/login?redirectedFrom=/agenda')
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login?redirectedFrom=/agenda')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single<{ role: string }>()
-
+  const { id: userId, profile } = current
   const isTutor = profile?.role === 'tutor'
   const now = new Date().toISOString()
+
+  const supabase = await createClient()
 
   let upcoming: SessionItem[] = []
   let past: SessionItem[] = []
@@ -32,7 +26,7 @@ export default async function AgendaPage() {
     const { data: tutorProfile } = await supabase
       .from('tutor_profiles')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single<{ id: string }>()
 
     if (tutorProfile) {
@@ -90,7 +84,7 @@ export default async function AgendaPage() {
         ),
         sessions!inner ( id, starts_at, ends_at, status, whereby_room_url )
       `)
-      .eq('learner_id', user.id)
+      .eq('learner_id', userId)
       .eq('status', 'confirmed')
 
     const rows = (data ?? []) as unknown as RawLearnerBooking[]
@@ -99,24 +93,15 @@ export default async function AgendaPage() {
       return s.id
     })
 
-    // Fetch which sessions have feedback available for this learner
     const feedbackSet = new Set<string>()
-    if (sessionIds.length > 0) {
-      const { data: feedbackRows } = await supabase
-        .from('session_feedback')
-        .select('session_id')
-        .in('session_id', sessionIds)
-      for (const f of feedbackRows ?? []) feedbackSet.add(f.session_id)
-    }
-
-    // Fetch which sessions already have a review from this learner
     const reviewedSet = new Set<string>()
+
     if (sessionIds.length > 0) {
-      const { data: reviewRows } = await supabase
-        .from('reviews')
-        .select('session_id')
-        .in('session_id', sessionIds)
-        .eq('reviewer_id', user.id)
+      const [{ data: feedbackRows }, { data: reviewRows }] = await Promise.all([
+        supabase.from('session_feedback').select('session_id').in('session_id', sessionIds),
+        supabase.from('reviews').select('session_id').in('session_id', sessionIds).eq('reviewer_id', userId),
+      ])
+      for (const f of feedbackRows ?? []) feedbackSet.add(f.session_id)
       for (const r of reviewRows ?? []) reviewedSet.add(r.session_id)
     }
 
