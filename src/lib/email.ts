@@ -530,3 +530,298 @@ export async function sendTutorReactivation(opts: {
   })
   return resend.emails.send({ from: FROM, to: opts.to, ...template })
 }
+
+// ---------- tutor cancellation ----------
+
+function bookingCancelledByTutorLearner(opts: {
+  recipientName: string
+  tutorName: string
+  startsAt: string
+  amount: number
+}) {
+  const date = formatDate(opts.startsAt)
+  const time = formatTime(opts.startsAt)
+
+  return {
+    subject: 'Sessão cancelada pelo entrevistador — MockFlow',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Sessão cancelada pelo entrevistador</p>
+          <p style="margin:0 0 24px;color:#71717a">Olá, ${opts.recipientName}. Infelizmente o entrevistador precisou cancelar sua sessão.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:24px">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Entrevistador</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.tutorName}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Data</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right;text-transform:capitalize">${date}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">Horário</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;text-align:right">${time} (60 min)</td>
+            </tr>
+          </table>
+
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;font-size:13px;color:#166534">
+            Reembolso integral de R$ ${opts.amount.toFixed(2).replace('.', ',')} será processado em até 5 dias úteis.
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Dúvidas? <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Central de Ajuda</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+function bookingCancelledByTutorConfirmation(opts: {
+  tutorName: string
+  startsAt: string
+}) {
+  const date = formatDate(opts.startsAt)
+  const time = formatTime(opts.startsAt)
+
+  return {
+    subject: 'Cancelamento confirmado — MockFlow',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Cancelamento confirmado</p>
+          <p style="margin:0 0 24px;color:#71717a">Olá, ${opts.tutorName}. Sua sessão foi cancelada com sucesso e o aluno será reembolsado integralmente.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Data</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right;text-transform:capitalize">${date}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">Horário</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;text-align:right">${time} (60 min)</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Dúvidas? <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Central de Ajuda</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+export async function sendBookingCancelledByTutor(opts: {
+  to: string
+  recipientName: string
+  tutorName: string
+  startsAt: string
+  amount: number
+  appUrl: string
+  isTutorCopy?: boolean
+}) {
+  const template = opts.isTutorCopy
+    ? bookingCancelledByTutorConfirmation({ tutorName: opts.tutorName, startsAt: opts.startsAt })
+    : bookingCancelledByTutorLearner({
+        recipientName: opts.recipientName,
+        tutorName: opts.tutorName,
+        startsAt: opts.startsAt,
+        amount: opts.amount,
+      })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}
+
+// ---------- no-show ----------
+
+function noShowReportedLearnerTemplate(opts: {
+  recipientName: string
+  tutorName: string
+  startsAt: string
+  amount: number
+}) {
+  const date = formatDate(opts.startsAt)
+  const time = formatTime(opts.startsAt)
+
+  return {
+    subject: 'Reembolso em andamento — MockFlow',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Reporte de ausência recebido</p>
+          <p style="margin:0 0 24px;color:#71717a">Olá, ${opts.recipientName}. Recebemos seu reporte de ausência do entrevistador ${opts.tutorName} na sessão abaixo.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:24px">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Entrevistador</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.tutorName}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Data</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right;text-transform:capitalize">${date}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">Horário</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;text-align:right">${time} (60 min)</td>
+            </tr>
+          </table>
+
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;font-size:13px;color:#166534">
+            Reembolso integral de R$ ${opts.amount.toFixed(2).replace('.', ',')} será processado em até 5 dias úteis.
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Dúvidas? <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Central de Ajuda</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+function noShowNotifiedTutorTemplate(opts: {
+  tutorName: string
+  learnerName: string
+  startsAt: string
+}) {
+  const date = formatDate(opts.startsAt)
+  const time = formatTime(opts.startsAt)
+
+  return {
+    subject: 'Ausência reportada — MockFlow',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Ausência reportada</p>
+          <p style="margin:0 0 24px;color:#71717a">Olá, ${opts.tutorName}. O candidato ${opts.learnerName} reportou sua ausência na sessão abaixo. O aluno foi reembolsado integralmente.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Candidato</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.learnerName}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Data</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right;text-transform:capitalize">${date}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">Horário</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;text-align:right">${time} (60 min)</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Dúvidas? <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Central de Ajuda</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+export async function sendNoShowReportedLearner(opts: {
+  to: string
+  recipientName: string
+  tutorName: string
+  startsAt: string
+  amount: number
+}) {
+  const template = noShowReportedLearnerTemplate({
+    recipientName: opts.recipientName,
+    tutorName: opts.tutorName,
+    startsAt: opts.startsAt,
+    amount: opts.amount,
+  })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}
+
+export async function sendNoShowNotifiedTutor(opts: {
+  to: string
+  tutorName: string
+  learnerName: string
+  startsAt: string
+}) {
+  const template = noShowNotifiedTutorTemplate({
+    tutorName: opts.tutorName,
+    learnerName: opts.learnerName,
+    startsAt: opts.startsAt,
+  })
+  return resend.emails.send({ from: FROM, to: opts.to, ...template })
+}

@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Calendar, Clock, Video, Star, ClipboardList, TrendingUp } from 'lucide-react'
 import { CancelButton } from '@/components/booking/cancel-button'
+import { TutorCancelButton } from '@/components/booking/tutor-cancel-button'
+import { NoShowButton } from '@/components/booking/no-show-button'
 
 export default async function AgendaPage() {
   const current = await getCurrentUser()
@@ -322,6 +324,9 @@ function SessionCard({
         {upcoming && !isTutor && (
           <CancelButton bookingId={session.booking_id} hoursUntilSession={hoursUntilSession} />
         )}
+        {upcoming && isTutor && (
+          <TutorCancelButton bookingId={session.booking_id} />
+        )}
 
         {/* Tutor: past session without feedback → Dar feedback */}
         {!upcoming && isTutor && sessionEnded && !session.has_feedback && (
@@ -366,7 +371,14 @@ function SessionCard({
           </Button>
         )}
 
-        {!upcoming && <Badge variant="secondary" className="text-xs">Concluída</Badge>}
+        {!upcoming && session.status !== 'no_show' && <Badge variant="secondary" className="text-xs">Concluída</Badge>}
+        {!upcoming && session.status === 'no_show' && <Badge variant="destructive" className="text-xs">Ausência</Badge>}
+
+        {/* Learner: report no-show within 24h of session end */}
+        {!upcoming && !isTutor && session.status !== 'no_show' &&
+          (Date.now() - new Date(session.ends_at).getTime()) < 24 * 60 * 60 * 1000 && (
+          <NoShowButton bookingId={session.booking_id} />
+        )}
       </div>
     </div>
   )
