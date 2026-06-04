@@ -102,18 +102,10 @@ export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: R
 
       {/* Checkout summary */}
       {selectedSlotId && (
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+        <div className="rounded-lg border bg-muted/30 p-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Sessão com {tutorName}</span>
-            <span>R$ {price.toFixed(2).replace('.', ',')}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Taxa da plataforma (10%)</span>
-            <span>R$ {(price * 0.1).toFixed(2).replace('.', ',')}</span>
-          </div>
-          <div className="flex justify-between border-t pt-2 font-semibold">
-            <span>Total</span>
-            <span>R$ {price.toFixed(2).replace('.', ',')}</span>
+            <span className="font-semibold">R$ {price.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
       )}
