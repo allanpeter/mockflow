@@ -20,6 +20,23 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
 
   if (profile?.role !== 'learner') return { error: 'Apenas candidatos podem agendar sessões.' }
 
+  // Check minimum 3-hour advance notice
+  const { data: slot } = await supabase
+    .from('availability_slots')
+    .select('starts_at')
+    .eq('id', slotId)
+    .single<{ starts_at: string }>()
+
+  if (!slot) return { error: 'Horário não encontrado.' }
+
+  const slotTime = new Date(slot.starts_at).getTime()
+  const now = Date.now()
+  const hoursUntilSlot = (slotTime - now) / (1000 * 60 * 60)
+
+  if (hoursUntilSlot < 3) {
+    return { error: 'É necessário um mínimo de 3 horas de antecedência para agendar uma sessão.' }
+  }
+
   // Lock slot + create booking atomically
   const { data: bookingId, error: bookingError } = await supabase
     .rpc('create_booking', { p_learner_id: user.id, p_slot_id: slotId })

@@ -81,16 +81,22 @@ export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: R
             {daySlots.map((slot) => {
               const time = formatTimePtBr(slot.starts_at)
               const selected = selectedSlotId === slot.id
+              const hoursUntil = (new Date(slot.starts_at).getTime() - Date.now()) / (1000 * 60 * 60)
+              const tooSoon = hoursUntil < 3
               return (
                 <button
                   key={slot.id}
                   type="button"
+                  disabled={tooSoon}
                   onClick={() => setSelectedSlotId(slot.id)}
                   className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                    selected
+                    tooSoon
+                      ? 'border-muted bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                      : selected
                       ? 'border-primary bg-primary text-primary-foreground'
                       : 'hover:border-primary hover:text-primary'
                   }`}
+                  title={tooSoon ? 'Mínimo 3 horas de antecedência' : undefined}
                 >
                   {time}
                 </button>
