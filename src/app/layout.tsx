@@ -16,6 +16,9 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 export const metadata: Metadata = {
   title: 'MockFlow — Pratique entrevistas com profissionais',
   description: 'Agende mock interviews com engenheiros experientes e acelere sua carreira.',
+  icons: {
+    icon: '/favicon.svg',
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_SEARCH_CONSOLE_ID,
   },

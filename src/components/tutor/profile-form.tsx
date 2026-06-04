@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { TechStackSelector } from './tech-stack-selector'
+import { VideoUploader } from './video-uploader'
 import { INTERVIEW_FORMATS, SENIORITY_LEVELS, LANGUAGES } from '@/lib/tutor-options'
 import type { Company, Database } from '@/types/supabase'
 
@@ -62,6 +63,7 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
   const [seniority, setSeniority] = useState<string[]>(profile?.seniority_levels ?? [])
   const [languages, setLanguages] = useState<string[]>(profile?.languages ?? [])
   const [companies, setCompanies] = useState<Company[]>(profile?.companies ?? [])
+  const [introVideoUrl, setIntroVideoUrl] = useState(profile?.intro_video_url ?? '')
 
   const [state, action, isPending] = useActionState(
     async (prev: TutorProfileFormState, formData: FormData) => {
@@ -122,22 +124,14 @@ export function TutorProfileForm({ profile }: Readonly<Props>) {
 
       {/* Intro video */}
       <div className="space-y-2">
-        <Label htmlFor="intro_video_url">Vídeo de apresentação (URL)</Label>
-        <Input
-          id="intro_video_url"
-          name="intro_video_url"
-          type="url"
-          placeholder="https://youtube.com/watch?v=... ou Loom / Vimeo"
-          defaultValue={profile?.intro_video_url ?? ''}
-          aria-invalid={!!errors.intro_video_url}
-          className={errors.intro_video_url ? 'border-destructive' : ''}
+        <input type="hidden" name="intro_video_url" value={introVideoUrl} />
+        <VideoUploader
+          currentVideoUrl={introVideoUrl}
+          onVideoUrlChange={setIntroVideoUrl}
         />
         {errors.intro_video_url && (
           <p className="text-sm text-destructive">{errors.intro_video_url[0]}</p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Perfis com vídeo recebem muito mais agendamentos. Apresente-se em 60s.
-        </p>
       </div>
 
       {/* Experience */}
