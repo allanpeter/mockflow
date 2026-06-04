@@ -101,15 +101,20 @@ export function VideoUploader({ currentVideoUrl, onVideoUrlChange }: Readonly<Pr
         body: formData,
       })
 
-      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
 
-      const { videoUrl } = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Upload failed')
+      }
+
+      const { videoUrl } = data
       onVideoUrlChange(videoUrl)
       setRecordedBlob(null)
       setActiveTab('record')
       toast.success('Vídeo enviado com sucesso!')
     } catch (err) {
-      toast.error('Erro ao enviar vídeo')
+      const message = err instanceof Error ? err.message : 'Erro ao enviar vídeo'
+      toast.error(message)
       console.error('Upload error:', err)
     } finally {
       setIsUploading(false)
@@ -135,13 +140,18 @@ export function VideoUploader({ currentVideoUrl, onVideoUrlChange }: Readonly<Pr
         body: formData,
       })
 
-      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
 
-      const { videoUrl } = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Upload failed')
+      }
+
+      const { videoUrl } = data
       onVideoUrlChange(videoUrl)
       toast.success('Vídeo enviado com sucesso!')
     } catch (err) {
-      toast.error('Erro ao enviar vídeo')
+      const message = err instanceof Error ? err.message : 'Erro ao enviar vídeo'
+      toast.error(message)
       console.error('Upload error:', err)
     } finally {
       setIsUploading(false)

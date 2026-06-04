@@ -37,8 +37,27 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
-      console.error('Supabase upload error:', error)
-      return NextResponse.json({ error: 'Erro ao fazer upload' }, { status: 500 })
+      console.error('[upload-video] Supabase error:', {
+        message: error.message,
+        status: error.status,
+        fileName,
+        fileSize: file.size,
+        contentType: file.type,
+      })
+
+      if (error.message.includes('404') || error.message.includes('not found')) {
+        return NextResponse.json({
+          error: 'Bucket "intro-videos" não encontrado. Configure o bucket no Supabase Storage.'
+        }, { status: 500 })
+      }
+
+      if (error.message.includes('permission')) {
+        return NextResponse.json({
+          error: 'Sem permissão. Verifique as políticas RLS do Supabase.'
+        }, { status: 403 })
+      }
+
+      return NextResponse.json({ error: `Erro no upload: ${error.message}` }, { status: 500 })
     }
 
     const {
@@ -47,7 +66,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ videoUrl: publicUrl })
   } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    console.error('[upload-video] Error:', error)
+    const message = error instanceof Error ? error.message : 'Erro desconhecido'
+    return NextResponse.json({ error: `Erro do servidor: ${message}` }, { status: 500 })
   }
 }
