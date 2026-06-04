@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { submitReview } from '@/app/actions/review'
 import { StarRatingInput } from '@/components/review/star-rating-input'
+import { formatDatePtBr } from '@/lib/date'
 
 interface Props {
   params: Promise<Readonly<{ sessionId: string }>>
@@ -56,8 +57,11 @@ export default async function ReviewPage({ params }: Readonly<Props>) {
 
   if (existing) redirect('/agenda')
 
-  const sessionDate = new Date(session.starts_at).toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+  const sessionDate = formatDatePtBr(session.starts_at, {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
   })
 
   return (

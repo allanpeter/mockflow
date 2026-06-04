@@ -1,6 +1,7 @@
 import { TrendingUp, ThumbsUp, Target, Lightbulb } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import type { SessionFeedbackRow } from '@/types/supabase'
+import { formatDatePtBr } from '@/lib/date'
 
 const dimensions: { key: keyof SessionFeedbackRow; label: string }[] = [
   { key: 'score_communication',    label: 'Comunicação' },
@@ -132,8 +133,10 @@ export function FeedbackDisplay({ feedback }: Readonly<{ feedback: SessionFeedba
       )}
 
       <p className="text-xs text-muted-foreground">
-        Feedback enviado em {new Date(feedback.created_at).toLocaleDateString('pt-BR', {
-          day: '2-digit', month: 'long', year: 'numeric',
+        Feedback enviado em {formatDatePtBr(feedback.created_at, {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
         })}
       </p>
     </div>

@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { formatDatePtBr, formatTimePtBr } from '@/lib/date'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -7,15 +8,16 @@ const FROM = 'MockFlow <noreply@mockflow.com.br>'
 // ---------- helpers ----------
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+  return formatDatePtBr(iso, {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
   })
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('pt-BR', {
-    hour: '2-digit', minute: '2-digit',
-  })
+  return formatTimePtBr(iso)
 }
 
 // ---------- templates ----------

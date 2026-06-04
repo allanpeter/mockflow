@@ -10,6 +10,7 @@ import { Calendar, Clock, Video, Star, ClipboardList, TrendingUp } from 'lucide-
 import { CancelButton } from '@/components/booking/cancel-button'
 import { TutorCancelButton } from '@/components/booking/tutor-cancel-button'
 import { NoShowButton } from '@/components/booking/no-show-button'
+import { formatDatePtBr, formatTimePtBr } from '@/lib/date'
 
 export default async function AgendaPage() {
   const current = await getCurrentUser()
@@ -230,16 +231,13 @@ function SessionCard({
   isTutor: boolean
   upcoming: boolean
 }>) {
-  const date = new Date(session.starts_at).toLocaleDateString('pt-BR', {
+  const date = formatDatePtBr(session.starts_at, {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
     year: 'numeric',
   })
-  const time = new Date(session.starts_at).toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const time = formatTimePtBr(session.starts_at)
 
   const sessionEnded = new Date(session.ends_at) < new Date()
   const hoursUntilSession =

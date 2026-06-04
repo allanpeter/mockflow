@@ -6,6 +6,7 @@ import { CheckCircle2, AlertCircle, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { markPayoutPaid } from '@/app/actions/mark-payout-paid'
+import { formatDatePtBr, formatTimePtBr } from '@/lib/date'
 
 interface Payout {
   id: string
@@ -38,10 +39,11 @@ export function PayoutRow({ payout }: Readonly<{ payout: Payout }>) {
   const tutor = payout.tutor_profiles
   const booking = payout.bookings
   const sessionDate = booking?.sessions?.starts_at
-    ? new Date(booking.sessions.starts_at).toLocaleString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      })
+    ? `${formatDatePtBr(booking.sessions.starts_at, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })} ${formatTimePtBr(booking.sessions.starts_at)}`
     : '—'
 
   const pixInfo = tutor?.pix_key

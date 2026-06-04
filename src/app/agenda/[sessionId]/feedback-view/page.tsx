@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import type { SessionFeedbackRow } from '@/types/supabase'
+import { formatDatePtBr } from '@/lib/date'
 
 interface Props {
   params: Promise<Readonly<{ sessionId: string }>>
@@ -55,8 +56,11 @@ export default async function FeedbackViewPage({ params }: Props) {
     .maybeSingle()
 
   const sessionDate = session
-    ? new Date(session.starts_at).toLocaleDateString('pt-BR', {
-        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+    ? formatDatePtBr(session.starts_at, {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
       })
     : null
 

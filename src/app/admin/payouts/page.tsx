@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PayoutRow } from '@/components/admin/payout-row'
+import { formatDatePtBr } from '@/lib/date'
 
 export default async function AdminPayoutsPage() {
   const supabase = await createClient()
@@ -62,7 +63,7 @@ export default async function AdminPayoutsPage() {
     if (!iso) return '—'
     const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }
     if (includeTime) { opts.hour = '2-digit'; opts.minute = '2-digit' }
-    return new Date(iso).toLocaleString('pt-BR', opts)
+    return formatDatePtBr(iso, opts)
   }
 
   type PendingPayout = typeof pending extends (infer T)[] | null ? T : never

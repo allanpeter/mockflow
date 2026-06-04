@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import type { SessionFeedbackRow, SeniorityLevel } from '@/types/supabase'
+import { formatDatePtBr } from '@/lib/date'
 
 // Dimension definitions — same order as rubric-form and feedback-display
 const DIMENSIONS: { key: keyof SessionFeedbackRow; label: string; short: string }[] = [
@@ -60,7 +61,7 @@ export default async function ProgressoPage() {
 
   // Fetch session dates + tutor names
   const sessionIds = feedbacks.map((f) => f.session_id)
-  let sessionMeta: Record<string, { starts_at: string; tutorName: string }> = {}
+  const sessionMeta: Record<string, { starts_at: string; tutorName: string }> = {}
 
   if (sessionIds.length > 0) {
     const { data: sessionRows } = await supabase
@@ -207,8 +208,10 @@ export default async function ProgressoPage() {
                 const meta = sessionMeta[feedback.session_id]
                 const avg = sessionAvgs[idx]
                 const date = meta?.starts_at
-                  ? new Date(meta.starts_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit', month: 'short', year: 'numeric',
+                  ? formatDatePtBr(meta.starts_at, {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
                     })
                   : '—'
 

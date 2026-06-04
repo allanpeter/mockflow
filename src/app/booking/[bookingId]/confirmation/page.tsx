@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, Calendar, Clock, Video, Loader2 } from 'lucide-react'
 import { PaymentPoller } from '@/components/booking/payment-poller'
+import { formatDatePtBr, formatTimePtBr } from '@/lib/date'
 
 interface Props {
   params: Promise<Readonly<{ bookingId: string }>>
@@ -61,15 +62,16 @@ export default async function ConfirmationPage({ params }: Readonly<Props>) {
   } | null
 
   const sessionDate = session
-    ? new Date(session.starts_at).toLocaleDateString('pt-BR', {
-        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
+    ? formatDatePtBr(session.starts_at, {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
       })
     : null
 
   const sessionTime = session
-    ? new Date(session.starts_at).toLocaleTimeString('pt-BR', {
-        hour: '2-digit', minute: '2-digit',
-      })
+    ? formatTimePtBr(session.starts_at)
     : null
 
   return (

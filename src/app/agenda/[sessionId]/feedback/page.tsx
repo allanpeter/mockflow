@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RubricForm } from '@/components/feedback/rubric-form'
 import { ClipboardList } from 'lucide-react'
+import { formatDatePtBr } from '@/lib/date'
 
 interface Props {
   params: Promise<Readonly<{ sessionId: string }>>
@@ -52,8 +53,10 @@ export default async function FeedbackPage({ params }: Props) {
   if (existing) redirect('/agenda')
 
   const learnerName = (booking.profiles as unknown as { full_name: string } | null)?.full_name ?? 'Candidato'
-  const sessionDate = new Date(session.starts_at).toLocaleDateString('pt-BR', {
-    weekday: 'long', day: '2-digit', month: 'long',
+  const sessionDate = formatDatePtBr(session.starts_at, {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
   })
 
   return (

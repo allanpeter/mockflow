@@ -5,6 +5,7 @@ import { AlertDialog } from '@base-ui/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
+import { formatDatePtBr } from '@/lib/date'
 
 interface User {
   id: string
@@ -89,11 +90,11 @@ export function UserTable() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(u.created_at).toLocaleDateString('pt-BR')}
+                  {formatDatePtBr(u.created_at)}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {u.last_sign_in_at
-                    ? new Date(u.last_sign_in_at).toLocaleDateString('pt-BR')
+                    ? formatDatePtBr(u.last_sign_in_at)
                     : '—'}
                 </td>
                 <td className="px-4 py-3 text-right">

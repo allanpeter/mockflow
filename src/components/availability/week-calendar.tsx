@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { createSlot, deleteSlot } from '@/app/actions/availability'
 import { Button } from '@/components/ui/button'
+import { formatDatePtBr } from '@/lib/date'
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8)
 const DAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -194,7 +195,7 @@ export function WeekCalendar({ initialSlots }: Readonly<Props>) {
   const nextWeek = () => setWeekStart(w => addDays(w, 7))
   const goToday  = () => setWeekStart(startOfWeek(new Date()))
 
-  const weekLabel = `${days[0].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} – ${days[6].toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
+  const weekLabel = `${formatDatePtBr(days[0].toISOString(), { day: '2-digit', month: 'short' })} – ${formatDatePtBr(days[6].toISOString(), { day: '2-digit', month: 'short', year: 'numeric' })}`
 
   return (
     <div className="space-y-4 select-none" onDragStart={e => e.preventDefault()}>

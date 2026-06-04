@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CheckCircle2, Clock, AlertCircle, Wallet } from 'lucide-react'
+import { formatDatePtBr } from '@/lib/date'
 
 export default async function GanhosPage() {
   const supabase = await createClient()
@@ -67,7 +68,7 @@ export default async function GanhosPage() {
 
   function formatDate(iso: string | null) {
     if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    return formatDatePtBr(iso, { day: '2-digit', month: '2-digit', year: 'numeric' })
   }
 
   return (

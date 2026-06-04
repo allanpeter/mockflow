@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatDatePtBr, formatTimePtBr } from '@/lib/date'
 import { initiateBooking } from '@/app/actions/booking'
 
 interface Slot {
@@ -24,7 +25,7 @@ interface Props {
 function groupByDate(slots: Slot[]): Record<string, Slot[]> {
   const groups: Record<string, Slot[]> = {}
   for (const slot of slots) {
-    const day = new Date(slot.starts_at).toLocaleDateString('pt-BR', {
+    const day = formatDatePtBr(slot.starts_at, {
       weekday: 'long',
       day: '2-digit',
       month: 'long',
@@ -78,10 +79,7 @@ export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: R
           <p className="mb-2 text-sm font-medium capitalize">{day}</p>
           <div className="flex flex-wrap gap-2">
             {daySlots.map((slot) => {
-              const time = new Date(slot.starts_at).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })
+              const time = formatTimePtBr(slot.starts_at)
               const selected = selectedSlotId === slot.id
               return (
                 <button
