@@ -115,13 +115,12 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-4 py-24 text-center space-y-6">
-        <h1 className="text-5xl font-bold tracking-tight leading-tight">
-          Você não é ruim em entrevistas.<br />
-          <span className="text-primary">Você só nunca treinou em uma de verdade.</span>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+          Treine para a entrevista que pode mudar sua carreira
         </h1>
 
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
-          O MockFlow conecta você com engenheiros experientes para simulações reais, com pressão real e feedback direto. Para você chegar preparado — não na sorte.
+          Simule entrevistas reais com profissionais experientes, receba feedback detalhado e descubra exatamente o que melhorar antes do processo seletivo.
         </p>
 
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
