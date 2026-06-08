@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+
+// Must match the cookie set in /api/auth/google
+const PENDING_ROLE_COOKIE = 'mockflow_pending_role'
 
 // Handles both email confirmation links and OAuth redirects
 export async function GET(request: Request) {
@@ -19,13 +23,33 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
+        const cookieStore = await cookies()
+        const pendingRole = cookieStore.get(PENDING_ROLE_COOKIE)?.value
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single<{ role: string | null }>()
 
-        if (!profile?.role) {
+        // Apply the role chosen at signup. The DB trigger defaults new profiles
+        // to 'learner', so for a tutor signing up via Google we must correct it
+        // here from the cookie carried across the OAuth round-trip.
+        if (
+          (pendingRole === 'tutor' || pendingRole === 'learner') &&
+          profile?.role !== pendingRole
+        ) {
+          await supabase
+            .from('profiles')
+            .update({ role: pendingRole })
+            .eq('id', user.id)
+        }
+
+        if (pendingRole) {
+          cookieStore.delete(PENDING_ROLE_COOKIE)
+        }
+
+        if (!profile?.role && !pendingRole) {
           return NextResponse.redirect(`${appUrl}/auth/select-role`)
         }
       }
