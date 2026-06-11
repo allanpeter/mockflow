@@ -51,7 +51,6 @@ export default function SelectRolePage() {
           <RoleCard
             title="Sou Entrevistador"
             description="Ofereço sessões de mock interview e recebo por isso"
-            emoji="🧑‍💻"
             loading={loading === 'tutor'}
             onSelect={() => selectRole('tutor')}
             disabled={loading !== null}
@@ -59,7 +58,6 @@ export default function SelectRolePage() {
           <RoleCard
             title="Sou Candidato"
             description="Quero praticar entrevistas com profissionais experientes"
-            emoji="🎯"
             loading={loading === 'learner'}
             onSelect={() => selectRole('learner')}
             disabled={loading !== null}
@@ -73,14 +71,12 @@ export default function SelectRolePage() {
 function RoleCard({
   title,
   description,
-  emoji,
   loading,
   disabled,
   onSelect,
 }: Readonly<{
   title: string
   description: string
-  emoji: string
   loading: boolean
   disabled: boolean
   onSelect: () => void
@@ -92,7 +88,6 @@ function RoleCard({
       onClick={onSelect}
       disabled={disabled}
     >
-      <span className="mr-3 text-2xl">{emoji}</span>
       <span className="text-left">
         <span className="block font-medium">{loading ? 'Salvando…' : title}</span>
         <span className="block text-sm font-normal text-muted-foreground">{description}</span>

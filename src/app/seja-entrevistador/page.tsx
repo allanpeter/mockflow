@@ -1,8 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Check, DollarSign, Clock, Users } from 'lucide-react'
-import { InterviewerApplicationForm } from '@/components/pages/interviewer-application-form'
+import { ArrowRight, Check, DollarSign, Clock, Users, Sparkles } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Seja Entrevistador — Monetize sua experiência',
@@ -66,10 +65,77 @@ export default function SejaEntrevistador() {
           Tenha visto entrevistas de verdade? Sabe como as empresas realmente contratam? Então você tem exatamente o que candidatos precisam.
         </p>
 
-        <Button size="lg" render={<a href="#cadastro" />}>
+        <Button size="lg" render={<Link href="/auth/signup?role=tutor" />}>
           Quero ser entrevistador
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
+
+        <div className="flex justify-center pt-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <Sparkles className="h-4 w-4" />
+            Os primeiros entrevistadores ganham destaque fixo no topo da listagem.
+          </div>
+        </div>
+      </section>
+
+      {/* Earnings section */}
+      <section className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t bg-primary/5">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">Quanto você pode ganhar</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Exemplos reais baseados em entrevistas de 60 minutos
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border bg-card p-6 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Iniciante</p>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">R$ 360</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>1 entrevista por semana</p>
+              <p>R$ 100/sessão (você recebe R$ 90)</p>
+              <p>4 horas/mês</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 space-y-4 ring-2 ring-primary">
+            <p className="text-sm font-medium text-muted-foreground">Profissional</p>
+            <div className="space-y-2">
+              <p className="text-3xl font-bold text-primary">R$ 1.800</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>5 entrevistas por semana</p>
+              <p>R$ 100/sessão (você recebe R$ 90)</p>
+              <p>20 horas/mês</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Expert</p>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">R$ 4.860</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>6 entrevistas por semana</p>
+              <p>R$ 225/sessão (você recebe R$ 202,50)</p>
+              <p>24 horas/mês</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-2xl space-y-4 text-center">
+          <p className="text-center text-sm text-muted-foreground">
+            Estes são exemplos. Você controla seu preço, sua disponibilidade e quantas entrevistas aceita por semana.
+          </p>
+          <p className="text-lg font-semibold text-foreground">
+            Tudo isso trabalhando apenas <span className="text-primary">1 hora por dia</span>.
+          </p>
+        </div>
       </section>
 
       {/* How it works */}
@@ -117,7 +183,6 @@ export default function SejaEntrevistador() {
       <section className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-bold">Requisitos</h2>
-          <p className="text-muted-foreground">Seja honesto. Candidatos sabem quando alguém não tem real experiência.</p>
         </div>
 
         <div className="mx-auto max-w-2xl">
@@ -132,86 +197,14 @@ export default function SejaEntrevistador() {
         </div>
       </section>
 
-      {/* Earnings section */}
-      <section className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t bg-primary/5">
-        <div className="text-center space-y-3">
-          <h2 className="text-3xl font-bold">Quanto você pode ganhar</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Exemplos reais baseados em entrevistas de 60 minutos
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-xl border bg-card p-6 space-y-4">
-            <p className="text-sm font-medium text-muted-foreground">Iniciante</p>
-            <div className="space-y-2">
-              <p className="text-2xl font-bold">R$ 400</p>
-              <p className="text-xs text-muted-foreground">por mês</p>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>1 entrevista por semana</p>
-              <p>R$ 100/sessão</p>
-              <p>4 horas/mês</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 space-y-4 relative ring-2 ring-primary">
-            <div className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
-              Mais popular
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">Profissional</p>
-            <div className="space-y-2">
-              <p className="text-3xl font-bold text-primary">R$ 2.000</p>
-              <p className="text-xs text-muted-foreground">por mês</p>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>5 entrevistas por semana</p>
-              <p>R$ 100/sessão</p>
-              <p>5 horas/mês</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 space-y-4">
-            <p className="text-sm font-medium text-muted-foreground">Expert</p>
-            <div className="space-y-2">
-              <p className="text-2xl font-bold">R$ 5.400</p>
-              <p className="text-xs text-muted-foreground">por mês</p>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>6 entrevistas por semana</p>
-              <p>R$ 225/sessão</p>
-              <p>6 horas/mês</p>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Estes são exemplos. Você controla seu preço, sua disponibilidade e quantas entrevistas aceita por semana.
-        </p>
-      </section>
-
-      {/* Form section */}
-      <section id="cadastro" className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t">
-        <div className="text-center space-y-3">
-          <h2 className="text-3xl font-bold">Manifeste seu interesse</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Preencha o formulário abaixo e entraremos em contato para os próximos passos. Você receberá um email com instruções de como criar seu perfil completo.
-          </p>
-        </div>
-
-        <div className="mx-auto max-w-2xl">
-          <InterviewerApplicationForm />
-        </div>
-      </section>
-
       {/* CTA Final */}
       <section className="mx-auto max-w-4xl px-4 py-20 text-center space-y-6 border-t">
         <h2 className="text-3xl font-bold">Pronto para começar?</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Manifeste seu interesse agora. O processo é simples, rápido e sem compromisso.
+          Crie sua conta e configure seu perfil em minutos. Defina seu preço, sua agenda e comece a receber candidatos.
         </p>
-        <Button size="lg" render={<a href="#cadastro" />}>
-          Preencher formulário
+        <Button size="lg" render={<Link href="/auth/signup?role=tutor" />}>
+          Criar minha conta de entrevistador
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </section>

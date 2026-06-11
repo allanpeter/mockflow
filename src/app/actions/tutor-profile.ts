@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { ALL_TECHS } from '@/lib/tech-stack'
 import { INTERVIEW_FORMATS, SENIORITY_LEVELS, LANGUAGES } from '@/lib/tutor-options'
 import { upsertRecipient } from '@/lib/payment'
+import { sendInterviewerWelcome, sendNewInterviewerAdminNotification } from '@/lib/email'
 
 const PIX_KEY_TYPES = ['cpf', 'cnpj', 'email', 'phone', 'random'] as const
 
@@ -114,6 +115,8 @@ export async function upsertTutorProfile(
     .eq('user_id', user.id)
     .single<{ id: string }>()
 
+  const isNewProfile = !existing
+
   const payload = {
     ...parsed.data,
     headline: parsed.data.headline || null,
@@ -142,6 +145,40 @@ export async function upsertTutorProfile(
       })
 
   if (error) return { status: 'server_error', message: error.message }
+
+  // First-time profile creation: notify the new interviewer and the admin.
+  // Non-fatal: the profile is already saved; email failures only log.
+  if (isNewProfile) {
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+      const adminEmail = process.env.ADMIN_EMAIL
+
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single<{ full_name: string }>()
+
+      const tutorName = profileRow?.full_name ?? user.email ?? 'Entrevistador'
+
+      await Promise.allSettled([
+        user.email
+          ? sendInterviewerWelcome({ to: user.email, tutorName, appUrl })
+          : Promise.resolve(),
+        adminEmail
+          ? sendNewInterviewerAdminNotification({
+              to: adminEmail,
+              tutorName,
+              tutorEmail: user.email ?? '—',
+              techStack: parsed.data.tech_stack.join(', '),
+              pricePerSession: parsed.data.price_per_session,
+            })
+          : Promise.resolve(),
+      ])
+    } catch (err) {
+      console.error('[upsertTutorProfile] interviewer emails falharam:', err)
+    }
+  }
 
   // Create/update Pagar.me recipient when bank account is complete
   const hasBankDetails = payload.cpf && payload.bank_code && payload.bank_agency &&

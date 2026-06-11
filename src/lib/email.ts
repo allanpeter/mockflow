@@ -304,6 +304,130 @@ function bookingCancelled(opts: {
   }
 }
 
+function interviewerWelcome(opts: { tutorName: string; profileUrl: string }) {
+  return {
+    subject: 'Bem-vindo ao MockFlow como entrevistador 🎤',
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <!-- Header -->
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Você agora é entrevistador!</p>
+          <p style="margin:0 0 24px;color:#71717a">Olá, ${opts.tutorName}. Seu perfil de entrevistador foi criado. Falta pouco para começar a receber candidatos.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:24px">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">1.</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7">Configure sua disponibilidade de horários</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">2.</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7">Confirme seu preço e seus dados bancários</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">3.</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600">Ative seu perfil para aparecer na plataforma</td>
+            </tr>
+          </table>
+
+          <a href="${opts.profileUrl}" style="display:block;text-align:center;background:#18181b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px">
+            Completar meu perfil
+          </a>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Feito para devs brasileiros<br />
+            Em caso de dúvidas, acesse <a href="https://mockflow.com.br/ajuda" style="color:#a78bfa">Central de Ajuda</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
+function newInterviewerAdminNotification(opts: {
+  tutorName: string
+  tutorEmail: string
+  techStack: string
+  pricePerSession: number
+}) {
+  return {
+    subject: `Novo entrevistador: ${opts.tutorName}`,
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:system-ui,sans-serif;color:#18181b">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7">
+
+        <!-- Header -->
+        <tr><td style="background:#18181b;padding:24px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#fff">
+            <span style="color:#a78bfa">Mock</span>Flow
+          </p>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700">Novo entrevistador cadastrado</p>
+          <p style="margin:0 0 24px;color:#71717a">Alguém acabou de criar um perfil de entrevistador.</p>
+
+          <table width="100%" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden">
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Nome</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.tutorName}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Email</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.tutorEmail}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a;border-bottom:1px solid #e4e4e7">Stack</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;border-bottom:1px solid #e4e4e7;text-align:right">${opts.techStack}</td>
+            </tr>
+            <tr style="background:#fafafa">
+              <td style="padding:12px 16px;font-size:13px;color:#71717a">Preço/sessão</td>
+              <td style="padding:12px 16px;font-size:13px;font-weight:600;text-align:right">R$ ${opts.pricePerSession.toFixed(2).replace('.', ',')}</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:16px 32px;border-top:1px solid #e4e4e7;background:#fafafa">
+          <p style="margin:0;font-size:12px;color:#a1a1aa;text-align:center">
+            MockFlow · Notificação interna
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  }
+}
+
 // ---------- public send functions ----------
 
 export async function sendBookingConfirmedLearner(opts: {
@@ -327,6 +451,48 @@ export async function sendBookingConfirmedLearner(opts: {
     return result
   } catch (error) {
     console.error('[email] learner booking confirmed failed:', error)
+    throw error
+  }
+}
+
+export async function sendInterviewerWelcome(opts: {
+  to: string
+  tutorName: string
+  appUrl: string
+}) {
+  const template = interviewerWelcome({
+    tutorName: opts.tutorName,
+    profileUrl: `${opts.appUrl}/dashboard/profile`,
+  })
+  try {
+    const result = await resend.emails.send({ from: FROM, to: opts.to, ...template })
+    console.log('[email] interviewer welcome sent:', result)
+    return result
+  } catch (error) {
+    console.error('[email] interviewer welcome failed:', error)
+    throw error
+  }
+}
+
+export async function sendNewInterviewerAdminNotification(opts: {
+  to: string
+  tutorName: string
+  tutorEmail: string
+  techStack: string
+  pricePerSession: number
+}) {
+  const template = newInterviewerAdminNotification({
+    tutorName: opts.tutorName,
+    tutorEmail: opts.tutorEmail,
+    techStack: opts.techStack,
+    pricePerSession: opts.pricePerSession,
+  })
+  try {
+    const result = await resend.emails.send({ from: FROM, to: opts.to, ...template })
+    console.log('[email] new interviewer admin notification sent:', result)
+    return result
+  } catch (error) {
+    console.error('[email] new interviewer admin notification failed:', error)
     throw error
   }
 }

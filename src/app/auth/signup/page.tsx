@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -31,13 +32,25 @@ type FormValues = z.infer<typeof schema>
 type Step = 'role' | 'details' | 'confirm'
 
 export default function SignupPage() {
-  const [step, setStep] = useState<Step>('role')
+  return (
+    <Suspense>
+      <SignupInner />
+    </Suspense>
+  )
+}
+
+function SignupInner() {
+  const searchParams = useSearchParams()
+  const initialRole = searchParams.get('role')
+  const presetRole = initialRole === 'tutor' || initialRole === 'learner' ? initialRole : undefined
+
+  const [step, setStep] = useState<Step>(presetRole ? 'details' : 'role')
   const [googleLoading, setGoogleLoading] = useState(false)
   const supabase = createClient()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { full_name: '', email: '', password: '', role: undefined },
+    defaultValues: { full_name: '', email: '', password: '', role: presetRole },
   })
 
   const selectedRole = form.watch('role')
@@ -113,7 +126,6 @@ export default function SignupPage() {
               <RoleCard
                 title="Sou Entrevistador"
                 description="Ofereço sessões de mock interview e recebo por isso"
-                emoji="🧑‍💻"
                 selected={selectedRole === 'tutor'}
                 onSelect={() => {
                   form.setValue('role', 'tutor')
@@ -123,7 +135,6 @@ export default function SignupPage() {
               <RoleCard
                 title="Sou Candidato"
                 description="Quero praticar entrevistas com profissionais experientes"
-                emoji="🎯"
                 selected={selectedRole === 'learner'}
                 onSelect={() => {
                   form.setValue('role', 'learner')
@@ -244,13 +255,11 @@ export default function SignupPage() {
 function RoleCard({
   title,
   description,
-  emoji,
   selected,
   onSelect,
 }: Readonly<{
   title: string
   description: string
-  emoji: string
   selected: boolean
   onSelect: () => void
 }>) {
@@ -264,12 +273,9 @@ function RoleCard({
           : 'border-border hover:border-primary/50'
       }`}
     >
-      <div className="flex items-start gap-3">
-        <span className="text-2xl">{emoji}</span>
-        <div>
-          <p className="font-medium">{title}</p>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
+      <div>
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
     </button>
   )
