@@ -1,0 +1,220 @@
+import { Metadata } from 'next'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Check, DollarSign, Clock, Users } from 'lucide-react'
+import { InterviewerApplicationForm } from '@/components/pages/interviewer-application-form'
+
+export const metadata: Metadata = {
+  title: 'Seja Entrevistador — Monetize sua experiência',
+  description: 'Ganhe dinheiro ajudando desenvolvedores a se prepararem para entrevistas técnicas reais.',
+}
+
+const howItWorks = [
+  {
+    step: '01',
+    title: 'Crie seu perfil com stack e disponibilidade',
+    description: 'Configure sua experiência, tecnologias e horários que você está disponível.',
+  },
+  {
+    step: '02',
+    title: 'Defina seu preço por sessão',
+    description: 'Você controla quanto quer ganhar. De R$ 80 a R$ 400, você escolhe.',
+  },
+  {
+    step: '03',
+    title: 'Receba candidatos e conduza entrevistas',
+    description: 'Candidatos agendam suas sessões. Você conduz a entrevista e ganha 90% do valor.',
+  },
+]
+
+const benefits = [
+  {
+    icon: DollarSign,
+    title: '90% do valor',
+    description: 'MockFlow retém apenas 10%. Você fica com tudo o que combinar com o candidato.',
+  },
+  {
+    icon: Clock,
+    title: 'Flexibilidade total',
+    description: 'Você controla sua agenda. Trabalhe quando quiser, pelos horários que definir.',
+  },
+  {
+    icon: Users,
+    title: 'Sem exclusividade',
+    description: 'Seja entrevistador aqui e em outras plataformas simultaneamente.',
+  },
+]
+
+const requirements = [
+  '3+ anos de experiência em desenvolvimento de software',
+  'Já passou por processos seletivos técnicos em empresas médias ou grandes',
+  'Conhecimento profundo em pelo menos uma stack',
+  'Inglês não é obrigatório',
+  'Disponibilidade mínima de uma sessão por semana',
+]
+
+export default function SejaEntrevistador() {
+  return (
+    <main>
+      {/* Hero */}
+      <section className="mx-auto max-w-4xl px-4 py-24 text-center space-y-6">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+          Monetize sua experiência ajudando devs a conseguirem vagas melhores
+        </h1>
+
+        <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
+          Tenha visto entrevistas de verdade? Sabe como as empresas realmente contratam? Então você tem exatamente o que candidatos precisam.
+        </p>
+
+        <Button size="lg" render={<a href="#cadastro" />}>
+          Quero ser entrevistador
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </section>
+
+      {/* How it works */}
+      <section className="mx-auto max-w-4xl px-4 py-20 space-y-12 border-t">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">Como funciona</h2>
+          <p className="text-muted-foreground">3 passos simples para começar a ganhar</p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          {howItWorks.map((item) => (
+            <div key={item.step} className="space-y-4">
+              <div className="text-4xl font-bold text-primary/30">{item.step}</div>
+              <h3 className="font-semibold text-lg">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="mx-auto max-w-4xl px-4 py-20 space-y-12 border-t">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">O que você ganha</h2>
+          <p className="text-muted-foreground">Sem pegadinhas. Simples e direto.</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {benefits.map((benefit) => {
+            const Icon = benefit.icon
+            return (
+              <div key={benefit.title} className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                  <Icon className="h-6 w-6 text-primary" />
+                </div>
+                <p className="font-semibold text-lg">{benefit.title}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{benefit.description}</p>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Requirements */}
+      <section className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">Requisitos</h2>
+          <p className="text-muted-foreground">Seja honesto. Candidatos sabem quando alguém não tem real experiência.</p>
+        </div>
+
+        <div className="mx-auto max-w-2xl">
+          <ul className="space-y-4">
+            {requirements.map((req) => (
+              <li key={req} className="flex items-start gap-3">
+                <Check className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+                <span className="text-muted-foreground">{req}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Earnings section */}
+      <section className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t bg-primary/5">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">Quanto você pode ganhar</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Exemplos reais baseados em entrevistas de 60 minutos
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border bg-card p-6 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Iniciante</p>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">R$ 400</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>1 entrevista por semana</p>
+              <p>R$ 100/sessão</p>
+              <p>4 horas/mês</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 space-y-4 relative ring-2 ring-primary">
+            <div className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
+              Mais popular
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Profissional</p>
+            <div className="space-y-2">
+              <p className="text-3xl font-bold text-primary">R$ 2.000</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>5 entrevistas por semana</p>
+              <p>R$ 100/sessão</p>
+              <p>5 horas/mês</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 space-y-4">
+            <p className="text-sm font-medium text-muted-foreground">Expert</p>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">R$ 5.400</p>
+              <p className="text-xs text-muted-foreground">por mês</p>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>6 entrevistas por semana</p>
+              <p>R$ 225/sessão</p>
+              <p>6 horas/mês</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Estes são exemplos. Você controla seu preço, sua disponibilidade e quantas entrevistas aceita por semana.
+        </p>
+      </section>
+
+      {/* Form section */}
+      <section id="cadastro" className="mx-auto max-w-4xl px-4 py-20 space-y-8 border-t">
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl font-bold">Manifeste seu interesse</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Preencha o formulário abaixo e entraremos em contato para os próximos passos. Você receberá um email com instruções de como criar seu perfil completo.
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-2xl">
+          <InterviewerApplicationForm />
+        </div>
+      </section>
+
+      {/* CTA Final */}
+      <section className="mx-auto max-w-4xl px-4 py-20 text-center space-y-6 border-t">
+        <h2 className="text-3xl font-bold">Pronto para começar?</h2>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Manifeste seu interesse agora. O processo é simples, rápido e sem compromisso.
+        </p>
+        <Button size="lg" render={<a href="#cadastro" />}>
+          Preencher formulário
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </section>
+    </main>
+  )
+}

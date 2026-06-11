@@ -23,6 +23,9 @@ export function Header() {
           <Link href="/precos" className="text-muted-foreground transition-colors hover:text-foreground">
             Preços
           </Link>
+          <Link href="/seja-entrevistador" className="text-muted-foreground transition-colors hover:text-foreground">
+            Seja entrevistador
+          </Link>
           <Suspense fallback={null}>
             <HeaderAuthNav />
           </Suspense>
