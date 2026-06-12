@@ -62,7 +62,7 @@ export default function SejaEntrevistador() {
         </h1>
 
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
-          Tenha visto entrevistas de verdade? Sabe como as empresas realmente contratam? Então você tem exatamente o que candidatos precisam.
+          Você já esteve do outro lado da mesa. Sabe o que separa quem passa de quem não passa. Isso vale dinheiro.
         </p>
 
         <Button size="lg" render={<Link href="/auth/signup?role=tutor" />}>
