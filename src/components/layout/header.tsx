@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { Logo } from './logo'
 import { UserMenu } from './user-menu'
 import { ThemeToggle } from './theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -9,8 +10,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="font-bold text-lg">
-          <span className="text-primary">Mock</span>Flow
+        <Link href="/" aria-label="MockFlow — página inicial">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm md:flex">

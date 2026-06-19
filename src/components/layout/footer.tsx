@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from './logo'
 import { Separator } from '@/components/ui/separator'
 
 const links = {
@@ -26,8 +27,8 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="text-lg font-bold">
-              <span className="text-primary">Mock</span>Flow
+            <Link href="/" aria-label="MockFlow — página inicial">
+              <Logo />
             </Link>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
               Pratique entrevistas técnicas com profissionais experientes do mercado brasileiro.
@@ -109,8 +110,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors underline underline-offset-4"
             >
-              Allan Pimentel
-            </a>
+              Allan P.            </a>
             {' '}para devs brasileiros
           </p>
         </div>

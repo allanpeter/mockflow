@@ -12,12 +12,31 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 const sora = Sora({ subsets: ['latin'], variable: '--font-sora' })
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mockflow.com.br'
+
+const TITLE = 'MockFlow — Pratique entrevistas com profissionais'
+const DESCRIPTION = 'Agende mock interviews com engenheiros experientes e acelere sua carreira.'
 
 export const metadata: Metadata = {
-  title: 'MockFlow — Pratique entrevistas com profissionais',
-  description: 'Agende mock interviews com engenheiros experientes e acelere sua carreira.',
-  icons: {
-    icon: '/favicon.svg',
+  metadataBase: new URL(APP_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  // Favicon, app icon e apple-touch são resolvidos pelos arquivos
+  // src/app/{icon.svg,icon.png,apple-icon.png} (file conventions).
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    siteName: 'MockFlow',
+    url: APP_URL,
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MockFlow' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ['/og-image.png'],
   },
   verification: {
     google: process.env.NEXT_PUBLIC_SEARCH_CONSOLE_ID,
