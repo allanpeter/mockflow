@@ -142,6 +142,7 @@ export async function upsertTutorProfile(
         whereby_room_prefix: null,
         pagarme_recipient_id: null,
         is_active: false,
+        offers_free_sessions: false,
       })
 
   if (error) return { status: 'server_error', message: error.message }

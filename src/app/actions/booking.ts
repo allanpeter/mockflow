@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createOrder } from '@/lib/payment'
+import { confirmBooking } from '@/lib/confirm-booking'
 import { redirect } from 'next/navigation'
 
 export async function initiateBooking(slotId: string): Promise<{ error?: string }> {
@@ -45,6 +46,9 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     if (bookingError.message.includes('slot_unavailable')) {
       return { error: 'Este horário acabou de ser reservado por outra pessoa. Escolha outro.' }
     }
+    if (bookingError.message.includes('free_already_used')) {
+      return { error: 'Você já usou sua entrevista grátis. Aproveite para conhecer outros entrevistadores.' }
+    }
     return { error: bookingError.message }
   }
 
@@ -69,6 +73,12 @@ export async function initiateBooking(slotId: string): Promise<{ error?: string 
     }>()
 
   if (!booking) return { error: 'Erro ao criar reserva.' }
+
+  // Free session (entrevistador-grátis): skip Pagar.me, confirm immediately
+  if (booking.gross_amount === 0) {
+    await confirmBooking({ bookingId: booking.id, orderId: null, chargeId: null })
+    redirect(`/booking/${booking.id}/confirmation`)
+  }
 
   const tutorName = booking.tutor_profiles?.tutor?.full_name ?? 'Entrevistador'
   const tutorAvatar = booking.tutor_profiles?.tutor?.avatar_url ?? null

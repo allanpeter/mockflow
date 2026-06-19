@@ -20,6 +20,7 @@ interface Props {
   price: number
   isLoggedIn: boolean
   isLearner: boolean
+  isFree?: boolean
 }
 
 function groupByDate(slots: Slot[]): Record<string, Slot[]> {
@@ -36,7 +37,7 @@ function groupByDate(slots: Slot[]): Record<string, Slot[]> {
   return groups
 }
 
-export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: Readonly<Props>) {
+export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner, isFree = false }: Readonly<Props>) {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -111,7 +112,9 @@ export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: R
         <div className="rounded-lg border bg-muted/30 p-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Sessão com {tutorName}</span>
-            <span className="font-semibold">R$ {price.toFixed(2).replace('.', ',')}</span>
+            <span className="font-semibold">
+              {isFree ? 'Grátis' : `R$ ${price.toFixed(2).replace('.', ',')}`}
+            </span>
           </div>
         </div>
       )}
@@ -126,6 +129,8 @@ export function SlotPicker({ slots, tutorName, price, isLoggedIn, isLearner }: R
           ? 'Entrar para agendar'
           : isPending
           ? 'Processando…'
+          : isFree
+          ? 'Confirmar (grátis)'
           : 'Confirmar e pagar'}
       </Button>
 

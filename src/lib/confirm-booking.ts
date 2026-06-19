@@ -8,8 +8,8 @@ function endOfMonth(date: Date): Date {
 
 interface ConfirmBookingParams {
   bookingId: string
-  orderId: string
-  chargeId: string
+  orderId: string | null
+  chargeId: string | null
 }
 
 export async function confirmBooking({ bookingId, orderId, chargeId }: ConfirmBookingParams): Promise<{ confirmed: boolean }> {
@@ -46,13 +46,16 @@ export async function confirmBooking({ bookingId, orderId, chargeId }: ConfirmBo
 
   const slot = booking.availability_slots
   const meetingRoom = createMeeting({ bookingId: booking.id })
+  const isFree = booking.tutor_amount === 0
+
+  const bookingUpdate: { status: 'confirmed'; pagarme_order_id?: string; pagarme_charge_id?: string } = {
+    status: 'confirmed',
+  }
+  if (orderId) bookingUpdate.pagarme_order_id = orderId
+  if (chargeId) bookingUpdate.pagarme_charge_id = chargeId
 
   await Promise.all([
-    admin.from('bookings').update({
-      status: 'confirmed',
-      pagarme_order_id: orderId,
-      pagarme_charge_id: chargeId,
-    }).eq('id', booking.id),
+    admin.from('bookings').update(bookingUpdate).eq('id', booking.id),
 
     admin.from('availability_slots').update({
       is_booked: true,
@@ -68,14 +71,17 @@ export async function confirmBooking({ bookingId, orderId, chargeId }: ConfirmBo
       whereby_host_room_url: meetingRoom.hostRoomUrl,
     }, { onConflict: 'booking_id', ignoreDuplicates: true }),
 
-    admin.from('payouts').upsert({
-      booking_id: booking.id,
-      tutor_id: booking.tutor_id,
-      amount: booking.tutor_amount,
-      transfer_id: null,
-      paid_at: null,
-      release_at: endOfMonth(new Date(slot.ends_at)).toISOString(),
-    }, { onConflict: 'booking_id', ignoreDuplicates: true }),
+    // Free sessions generate no payout to the tutor
+    isFree
+      ? Promise.resolve()
+      : admin.from('payouts').upsert({
+          booking_id: booking.id,
+          tutor_id: booking.tutor_id,
+          amount: booking.tutor_amount,
+          transfer_id: null,
+          paid_at: null,
+          release_at: endOfMonth(new Date(slot.ends_at)).toISOString(),
+        }, { onConflict: 'booking_id', ignoreDuplicates: true }),
   ])
 
   const tutorName = booking.tutor_profiles?.profiles?.full_name ?? 'Entrevistador'

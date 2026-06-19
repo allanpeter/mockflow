@@ -53,6 +53,7 @@ type TutorProfileRow = {
   bank_account_digit: string | null
   bank_account_type: 'checking' | 'savings' | null
   is_active: boolean
+  offers_free_sessions: boolean
   created_at: string
   updated_at: string
 }

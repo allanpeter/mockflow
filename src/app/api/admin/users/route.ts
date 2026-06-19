@@ -32,16 +32,48 @@ export async function GET() {
 
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
+  // Free-session flag lives on tutor_profiles (keyed by user_id)
+  const { data: tutorProfiles } = await adminClient
+    .from('tutor_profiles')
+    .select('user_id, offers_free_sessions')
+
+  const freeMap = Object.fromEntries(
+    (tutorProfiles ?? []).map(t => [t.user_id, t.offers_free_sessions])
+  )
+
   const users = data.users.map(u => ({
     id: u.id,
     email: u.email,
     full_name: profileMap[u.id]?.full_name ?? null,
     role: profileMap[u.id]?.role ?? null,
+    offers_free_sessions: freeMap[u.id] ?? null,
     created_at: u.created_at,
     last_sign_in_at: u.last_sign_in_at,
   }))
 
   return NextResponse.json({ users })
+}
+
+// PATCH /api/admin/users — toggle a tutor's free-session mode
+// body: { userId: string, offersFree: boolean }
+export async function PATCH(request: Request) {
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { userId, offersFree } = await request.json().catch(() => ({}))
+  if (!userId || typeof offersFree !== 'boolean') {
+    return NextResponse.json({ error: 'Parâmetros inválidos.' }, { status: 400 })
+  }
+
+  const adminClient = createAdminClient()
+  const { error } = await adminClient
+    .from('tutor_profiles')
+    .update({ offers_free_sessions: offersFree })
+    .eq('user_id', userId)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
 }
 
 // DELETE /api/admin/users?id=uuid — delete a user via admin API (correct order)

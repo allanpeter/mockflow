@@ -4,7 +4,9 @@ import { useEffect, useState, useTransition } from 'react'
 import { AlertDialog } from '@base-ui/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { formatDatePtBr } from '@/lib/date'
 
 interface User {
@@ -12,6 +14,7 @@ interface User {
   email: string | undefined
   full_name: string | null
   role: string | null
+  offers_free_sessions: boolean | null
   created_at: string
   last_sign_in_at: string | undefined
 }
@@ -43,6 +46,24 @@ export function UserTable() {
       .catch(() => { setError('Erro ao carregar usuários.'); setLoading(false) })
   }, [])
 
+  function toggleFree(target: User, next: boolean) {
+    // optimistic update
+    setUsers(prev => prev.map(u => (u.id === target.id ? { ...u, offers_free_sessions: next } : u)))
+    fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: target.id, offersFree: next }),
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? 'Erro')
+      })
+      .catch(() => {
+        // rollback
+        setUsers(prev => prev.map(u => (u.id === target.id ? { ...u, offers_free_sessions: !next } : u)))
+        toast.error('Não foi possível alterar o modo grátis.')
+      })
+  }
+
   function confirmDelete() {
     if (!deleteTarget) return
     setDeleteError(null)
@@ -70,6 +91,7 @@ export function UserTable() {
               <th className="px-4 py-3 text-left font-medium">Nome</th>
               <th className="px-4 py-3 text-left font-medium">E-mail</th>
               <th className="px-4 py-3 text-left font-medium">Perfil</th>
+              <th className="px-4 py-3 text-left font-medium">Modo grátis</th>
               <th className="px-4 py-3 text-left font-medium">Cadastro</th>
               <th className="px-4 py-3 text-left font-medium">Último acesso</th>
               <th className="px-4 py-3" />
@@ -85,6 +107,17 @@ export function UserTable() {
                     <Badge variant={roleVariants[u.role] ?? 'outline'}>
                       {roleLabels[u.role] ?? u.role}
                     </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {u.role === 'tutor' ? (
+                    <Switch
+                      checked={u.offers_free_sessions ?? false}
+                      onCheckedChange={(checked) => toggleFree(u, checked)}
+                      aria-label={`Modo grátis para ${u.full_name ?? u.email}`}
+                    />
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

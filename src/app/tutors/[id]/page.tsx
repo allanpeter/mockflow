@@ -36,6 +36,7 @@ export default async function TutorPage({ params }: Props) {
       years_experience,
       tech_stack,
       price_per_session,
+      offers_free_sessions,
       is_active,
       profiles ( full_name, avatar_url ),
       reviews ( rating, comment, created_at, profiles ( full_name, avatar_url ) )
@@ -265,10 +266,19 @@ export default async function TutorPage({ params }: Props) {
         {/* Booking card (sticky on desktop) */}
         <aside className="lg:sticky lg:top-20">
           <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <p className="text-2xl font-bold">
-              R$ {tutor.price_per_session.toFixed(2).replace('.', ',')}
-              <span className="text-sm font-normal text-muted-foreground"> / sessão</span>
-            </p>
+            {tutor.offers_free_sessions ? (
+              <>
+                <p className="text-2xl font-bold text-primary">Grátis</p>
+                <p className="mt-0.5 text-sm font-medium text-primary">
+                  Primeira entrevista por nossa conta
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold">
+                R$ {tutor.price_per_session.toFixed(2).replace('.', ',')}
+                <span className="text-sm font-normal text-muted-foreground"> / sessão</span>
+              </p>
+            )}
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               60 minutos
@@ -284,6 +294,7 @@ export default async function TutorPage({ params }: Props) {
               price={tutor.price_per_session}
               isLoggedIn={!!user}
               isLearner={isLearner}
+              isFree={tutor.offers_free_sessions}
             />
           </div>
         </aside>
