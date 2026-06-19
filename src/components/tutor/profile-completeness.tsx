@@ -60,7 +60,7 @@ export function ProfileCompleteness({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Completude do perfil</h2>
+          <h2 className="font-semibold">Complete seu perfil</h2>
         </div>
         <span className={`text-2xl font-bold ${isFull ? 'text-success' : 'text-primary'}`}>
           {pct}%
