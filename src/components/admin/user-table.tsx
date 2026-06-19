@@ -112,9 +112,12 @@ export function UserTable() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  {u.role === 'tutor' ? (
+                  {/* offers_free_sessions é null só quando o usuário não tem
+                      perfil de entrevistador. Inclui admins que também são
+                      entrevistadores, não apenas role === 'tutor'. */}
+                  {u.offers_free_sessions !== null ? (
                     <Switch
-                      checked={u.offers_free_sessions ?? false}
+                      checked={u.offers_free_sessions}
                       onCheckedChange={(checked) => toggleFree(u, checked)}
                       aria-label={`Modo grátis para ${u.full_name ?? u.email}`}
                     />
